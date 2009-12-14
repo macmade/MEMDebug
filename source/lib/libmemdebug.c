@@ -117,7 +117,7 @@ struct memdebug_object
         /* The address of the function in which the object was allocated */
         void * alloc_func_addr;
         
-        /* The address of the function in which the object was allocated */
+        /* The address of the function in which the object was freed */
         void * free_func_addr;
         
     #endif
