@@ -37,6 +37,21 @@
 #include <ctype.h>
 #include <signal.h>
 
+/* Checks if we can have a backtrace, using execinfo.h */
+#if defined( __APPLE__ )
+    
+    /* Yes - Mac OS X */
+    #include <execinfo.h>
+    #define MEMDEBUG_HAVE_EXECINFO_H
+    
+#elif defined( __GLIBC__ ) && defined( HAVE_EXECINFO_H )
+    
+    /* GNU LibC */
+    #include <execinfo.h>
+    #define MEMDEBUG_HAVE_EXECINFO_H
+    
+#endif
+
 /* Local includes */
 #include "libmemdebug.h"
 
