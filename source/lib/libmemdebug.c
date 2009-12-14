@@ -690,7 +690,10 @@ void memdebug_backtrace( unsigned int skip_levels )
     }
     
     /* Horizontal ruler */
-    printf( MEMDEBUG_HR );
+    printf(
+        "# \n"
+        MEMDEBUG_HR
+    );
     
     /* Frees the memory symbol strings */
     free( symbols );
@@ -724,6 +727,7 @@ static void askForDebugCommand( void )
         "#     - p : Display all memory records (active and free)\n"
         "#     - a : Display only the active memory records\n"
         "#     - f : Display only the freed memory records\n"
+        "# \n"
         MEMDEBUG_HR
         "\n"
         "Choice: "
@@ -817,6 +821,7 @@ static void memdebug_sig_handler( int id )
                 MEMDEBUG_HR
                 "# MEMDebug: SIGSEGV\n"
                 MEMDEBUG_HR
+                "# \n"
                 "# A segmentation fault was detected.\n"
             );
             
@@ -827,6 +832,7 @@ static void memdebug_sig_handler( int id )
                 MEMDEBUG_HR
                 "# MEMDebug: SIGBUS\n"
                 MEMDEBUG_HR
+                "# \n"
                 "# A bus error was detected.\n"
                 "Choice: "
             );
@@ -876,6 +882,7 @@ static void memdebug_warning( const char * str, const char * file, const int lin
         MEMDEBUG_HR
         "# MEMDebug: WARNING\n"
         MEMDEBUG_HR
+        "# \n"
         "# %s\n"
         "# \n"
         "# Function:    %s()\n"
