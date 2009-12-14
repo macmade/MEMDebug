@@ -158,6 +158,11 @@ static void memdebug_sig_handler( int id );
 static void memdebug_warning( const char * str, const char * file, const int line, const char * func );
 static void memdebug_print_object( struct memdebug_object * object );
 
+/* Checks if we can have a backtrace */
+#ifdef MEMDEBUG_HAVE_EXECINFO_H
+    static void memdebug_backtrace( unsigned int skip_levels );
+#endif
+
 /* Whether MEMDebug has been inited or not */
 static memdebug_bool memdebug_inited;
 
@@ -211,7 +216,7 @@ static void memdebug_init( void )
     }
     
     /* Allocates room for memory record objects */
-    if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )calloc( MEMDEBUG_POOLSIZE, sizeof( struct memdebug_object ) ) ) ) {
+    if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )calloc( MEMDEBUG_POOL_SIZE, sizeof( struct memdebug_object ) ) ) ) {
         
         MEMDEBUG_FATAL(
             "MEMDebug error: cannot initialize the trace pool. Reason: %s\n",
@@ -225,7 +230,7 @@ static void memdebug_init( void )
     memdebug_trace->num_free      = 0;
     memdebug_trace->memory_total  = 0;
     memdebug_trace->memory_active = 0;
-    memdebug_trace->pool_size     = MEMDEBUG_POOLSIZE;
+    memdebug_trace->pool_size     = MEMDEBUG_POOL_SIZE;
     memdebug_inited               = TRUE;
 }
 
@@ -243,7 +248,7 @@ static struct memdebug_object * memdebug_new_object( void )
     if( memdebug_trace->pool_size == memdebug_trace->num_objects ) {
         
         /* No, let's reallocate some memory */
-        if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )realloc( memdebug_trace->objects, memdebug_trace->pool_size + MEMDEBUG_POOLSIZE ) ) ) {
+        if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )realloc( memdebug_trace->objects, memdebug_trace->pool_size + MEMDEBUG_POOL_SIZE ) ) ) {
             
             MEMDEBUG_FATAL(
                 "MEMDebug error: cannot reallocate the MEMDebug pool. Reason: %s\n",
@@ -252,7 +257,7 @@ static struct memdebug_object * memdebug_new_object( void )
         }
         
         /* Sets the new pool size */
-        memdebug_trace->pool_size += MEMDEBUG_POOLSIZE;
+        memdebug_trace->pool_size += MEMDEBUG_POOL_SIZE;
     }
     
     /* Increments the counter as we have a new object */
@@ -580,6 +585,119 @@ static void memdebug_dump( struct memdebug_object * object )
     }
 }
 
+/* Checks if we can have a backtrace */
+#ifdef MEMDEBUG_HAVE_EXECINFO_H
+
+/**
+ * Displays the backtrace (function call stack)
+ * 
+ * @return  void
+ */
+void memdebug_backtrace( unsigned int skip_levels )
+{
+    size_t size;
+    size_t i;
+    size_t j;
+    void * trace[ MEMDEBUG_BACKTRACE_SIZE + skip_levels ];
+    char ** symbols;
+    char * symbol;
+    unsigned long int frame_num;
+    
+    /* Gets the backtrace */
+    size    = backtrace( trace, MEMDEBUG_BACKTRACE_SIZE + skip_levels );
+    
+    /* Gets the symbols for the backtrace */
+    symbols = backtrace_symbols( trace, size );
+    
+    /* Header */
+    printf(
+        MEMDEBUG_HR
+        "# MEMDebug - Backtrace\n"
+        MEMDEBUG_HR
+        "# \n"
+    );
+    
+    /* Number of stack frames */
+    printf(
+        "# Displaying %lu stack frames:\n"
+        "# \n",
+        ( unsigned long int )size - skip_levels
+    );
+    
+    /* Process each frame */
+    for( i = skip_levels; i < size; i++ ) {
+        
+        /* Current symbol */
+        symbol = symbols[ i ];
+        
+        /* Process each character of the symbol string */
+        for( j = 0; j < strlen( symbol ); j++ ) {
+            
+            /* Checks if the frame number was passed, as we are going to rewrite it */
+            if( symbol[ j ] != ' ' && ( symbol[ j ] < 48 || symbol[ j ] > 57 ) ) {
+                
+                break;
+            }
+            
+            /* Still on the frame number - Increments the pointer so we don't print it */
+            symbol++;
+        }
+        
+        /* Frame number of the symbol */
+        frame_num = ( unsigned long int )i - skip_levels;
+        
+        /* Checks the frame number, in order to get a clean outpout */
+        if( frame_num < 10 ) {
+            
+            printf(
+                "#     %lu:    %s\n",
+                frame_num,
+                ++symbol
+            );
+            
+        } else if( frame_num < 100 ) {
+            
+            printf(
+                "#     %lu:   %s\n",
+                frame_num,
+                ++symbol
+            );
+            
+        } else if( frame_num < 1000 ) {
+            
+            printf(
+                "#     %lu:  %s\n",
+                frame_num,
+                ++symbol
+            );
+            
+        } else if( frame_num < 10000 ) {
+            
+            printf(
+                "#     %lu: %s\n",
+                frame_num,
+                ++symbol
+            );
+            
+        } else {
+            
+            printf(
+                "#     %lu:%s\n",
+                frame_num,
+                ++symbol
+            );
+        }
+    }
+    
+    /* Horizontal ruler */
+    printf( MEMDEBUG_HR );
+    
+    /* Frees the memory symbol strings */
+    free( symbols );
+}
+
+#endif
+
 /**
  * Asks for a debug command
  * 
@@ -588,6 +706,7 @@ static void memdebug_dump( struct memdebug_object * object )
 static void askForDebugCommand( void )
 {
     char c;
+    static unsigned int skip_levels = 3;
     
     printf(
         "# \n"
@@ -596,6 +715,12 @@ static void askForDebugCommand( void )
         "#     - c : Default: continue the program execution\n"
         "#     - q : Abort the program execution\n"
         "#     - s : Display the status of the memory allocations\n"
+        
+        /* Checks if we can have a backtrace */
+        #ifdef MEMDEBUG_HAVE_EXECINFO_H
+        "#     - t : Display the backtrace (function call stack)\n"
+        #endif
+        
         "#     - p : Display all memory records (active and free)\n"
         "#     - a : Display only the active memory records\n"
         "#     - f : Display only the freed memory records\n"
@@ -625,7 +750,21 @@ static void askForDebugCommand( void )
         printf( "\n" );
         memdebug_print_status();
         
-    } else if( c == 'p' || c == 'P' ) {
+    }
+    
+    /* Checks if we can have a backtrace */
+    #ifdef MEMDEBUG_HAVE_EXECINFO_H
+    
+    else if( c == 't' || c == 'T' ) {
+        
+        /* Prints the function call stack */
+        printf( "\n" );
+        memdebug_backtrace( skip_levels );
+    }
+    
+    #endif
+    
+    else if( c == 'p' || c == 'P' ) {
         
         /* Prints all allocated objects */
         printf( "\n" );
@@ -653,6 +792,8 @@ static void askForDebugCommand( void )
         /* Default - continues the program execution */
         return;
     }
+    
+    skip_levels++;
     
     /* Asks for a command again */
     askForDebugCommand();

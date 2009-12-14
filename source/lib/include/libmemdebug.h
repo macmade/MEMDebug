@@ -76,8 +76,13 @@
 #endif
 
 /* Defines the original pool size if it's not already defined */
-#ifndef MEMDEBUG_POOLSIZE
-#define MEMDEBUG_POOLSIZE 100    
+#ifndef MEMDEBUG_POOL_SIZE
+#define MEMDEBUG_POOL_SIZE 100    
+#endif
+
+/* Defines the bactrace size if it's not already defined */
+#ifndef MEMDEBUG_BACKTRACE_SIZE
+#define MEMDEBUG_BACKTRACE_SIZE 100    
 #endif
 
 /* Memory function prototypes - Never call them directly */
