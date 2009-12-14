@@ -72,7 +72,7 @@
         memdebug_init();                                                        \
     }
 
-/* Horizontal rules */
+/* Horizontal ruler */
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
 /* The number of bytes for each line of the memory data dump */
