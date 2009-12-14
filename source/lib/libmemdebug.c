@@ -153,6 +153,7 @@ static void memdebug_init( void );
 static struct memdebug_object * memdebug_new_object( void );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
+static void askForDebugCommand( void );
 static void memdebug_sig_handler( int id );
 static void memdebug_warning( const char * str, const char * file, const int line, const char * func );
 static void memdebug_print_object( struct memdebug_object * object );
@@ -580,6 +581,84 @@ static void memdebug_dump( struct memdebug_object * object )
 }
 
 /**
+ * Asks for a debug command
+ * 
+ * @return void
+ */
+static void askForDebugCommand( void )
+{
+    char c;
+    
+    printf(
+        "# \n"
+        "# Your choices are:\n"
+        "# \n"
+        "#     - c : Default: continue the program execution\n"
+        "#     - q : Abort the program execution\n"
+        "#     - s : Display the status of the memory allocations\n"
+        "#     - p : Display all memory records (active and free)\n"
+        "#     - a : Display only the active memory records\n"
+        "#     - f : Display only the freed memory records\n"
+        MEMDEBUG_HR
+        "\n"
+        "Choice: "
+    );
+    
+    /* Reads a character from STDIN to know what to do */
+    fflush( stdin );
+    c = getchar();
+    
+    /* Checks if the user choosed a command */
+    if( c == '\n' ) {
+        
+        /* Default - continues the program execution */
+        return;
+    }
+    
+    /* Don't not about the next characters */
+    while( getchar() != '\n' ) {}
+    
+    /* Checks if the user answer */
+    if( c == 's' || c == 'S' ) {
+        
+        /* Prints the memory allocation status */
+        printf( "\n" );
+        memdebug_print_status();
+        
+    } else if( c == 'p' || c == 'P' ) {
+        
+        /* Prints all allocated objects */
+        printf( "\n" );
+        memdebug_print_objects();
+        
+    } else if( c == 'a' || c == 'A' ) {
+        
+        /* Prints all active objects */
+        printf( "\n" );
+        memdebug_print_active();
+        
+    } else if( c == 'f' || c == 'F' ) {
+        
+        /* Prints all freed objects */
+        printf( "\n" );
+        memdebug_print_free();
+        
+    } else if( c == 'q' || c == 'Q' ) {
+        
+        /* Aborts the program execution */
+        exit( EXIT_FAILURE );
+        
+    } else {
+        
+        /* Default - continues the program execution */
+        return;
+    }
+    
+    /* Asks for a command again */
+    askForDebugCommand();
+}
+
+/**
  * Handles signals (SIGSEGV and SIGBUS)
  * 
  * @param   int     The ID of the signal
@@ -587,8 +666,6 @@ static void memdebug_dump( struct memdebug_object * object )
  */
 static void memdebug_sig_handler( int id )
 {
-    char c;
-    
     /* Checks the signal ID */
     if( id == SIGSEGV || id == SIGBUS ) {
         
@@ -600,10 +677,6 @@ static void memdebug_sig_handler( int id )
                 "# MEMDebug: SIGSEGV\n"
                 MEMDEBUG_HR
                 "# A segmentation fault was detected.\n"
-                "# Do you want to display a trace of the memory allocations before exiting? [Y/n]\n"
-                MEMDEBUG_HR
-                "\n"
-                "Choice: "
             );
             
         } else {
@@ -614,29 +687,32 @@ static void memdebug_sig_handler( int id )
                 "# MEMDebug: SIGBUS\n"
                 MEMDEBUG_HR
                 "# A bus error was detected.\n"
-                "# Do you want to display a trace of the memory allocations before exiting? [Y/n]\n"
-                MEMDEBUG_HR
-                "\n"
                 "Choice: "
             );
         }
         
-        /* Reads a character from STDIN to know what to do */
-        fflush( stdin );
-        c = getchar();
+        /* Asks for a debug command */
+        askForDebugCommand();
         
-        /* Checks if the user entered 'Y' */
-        if( c == 78 || c == 110 ) {
+        /* Checks the signal ID */
+        if( id == SIGSEGV ) {
             
-            /* Aborts the program execution */
-            exit( EXIT_FAILURE );
+            /* Segmentation fault */
+            printf(
+                "\n"
+                "SIGSEGV - Segmentation fault\n"
+                "Program execution stopped\n"
+            );
+            
+        } else {
+            
+            /* Bus error */
+            printf(
+                "\n"
+                "SIGBUS - Bus error\n"
+                "Program execution stopped\n"
+            );
         }
-        
-        /* Prints the memory debug */
-        printf( "\n" );
-        memdebug_print_objects();
-        printf( "\n" );
-        memdebug_print_status();
         
         /* Aborts the program execution */
         exit( EXIT_FAILURE );
@@ -654,8 +730,6 @@ static void memdebug_sig_handler( int id )
  */
 static void memdebug_warning( const char * str, const char * file, const int line, const char * func )
 {
-    char c;
-    
     /* Issues the warning message */
     printf(
         MEMDEBUG_HR
@@ -665,56 +739,15 @@ static void memdebug_warning( const char * str, const char * file, const int lin
         "# \n"
         "# Function:    %s()\n"
         "# File:        %s\n"
-        "# Line:        %i\n"
-        "# \n"
-        "# Do you want to continue [c], abort [a] the program, or display [p] a trace\n"
-        "# of the memory allocations? [C/a/p]\n"
-        MEMDEBUG_HR
-        "\n"
-        "Choice: ",
+        "# Line:        %i\n",
         str,
         func,
         file,
         line
     );
     
-    /* Reads a character from STDIN to know what to do */
-    fflush( stdin );
-    c = getchar();
-    
-    /* Checks the user answer */
-    if( c == 65 || c == 97 ) {
-        
-        /* Status */
-        printf(
-            "\n"
-            "Aborting the program execution...\n"
-            "\n"
-        );
-        
-        /* Aborts the program execution */
-        exit( EXIT_FAILURE );
-        
-    } else if( c == 80 || c == 112 ) {
-        
-        /* Prints the memory allocations */
-        printf( "\n" );
-        memdebug_print_objects();
-        printf( "\n" );
-        memdebug_print_status();
-        
-        /* Aborts the program execution */
-        exit( EXIT_FAILURE );
-        
-    } else {
-        
-        /* Nothing - Continues the normal execution */
-        printf(
-            "\n"
-            "Continuing the program execution...\n"
-            "\n"
-        );
-    }
+    /* Asks for a debug command */
+    askForDebugCommand();
 }
 
 /**
