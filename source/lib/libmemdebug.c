@@ -738,7 +738,7 @@ static void memdebug_print_object( struct memdebug_object * object )
         "# - Allocated in file:       %s\n"
         "# - Allocated at line:       %i\n"
         "# \n",
-        ( unsigned long int )object->ptr,
+        object->ptr,
         ( unsigned long int )object->size,
         object->alloc_func,
         #ifdef __GNUC__
