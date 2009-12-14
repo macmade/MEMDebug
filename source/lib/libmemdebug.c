@@ -732,7 +732,7 @@ static void memdebug_print_object( struct memdebug_object * object )
         "# \n"
         "# - Allocated in function:   %s()"
         #ifdef __GNUC__
-        " - %lu"
+        " - %p"
         #endif
         "\n"
         "# - Allocated in file:       %s\n"
@@ -742,7 +742,7 @@ static void memdebug_print_object( struct memdebug_object * object )
         ( unsigned long int )object->size,
         object->alloc_func,
         #ifdef __GNUC__
-        ( unsigned long int )object->alloc_func_addr,
+        object->alloc_func_addr,
         #endif
         object->alloc_file,
         object->alloc_line
@@ -756,7 +756,7 @@ static void memdebug_print_object( struct memdebug_object * object )
             "# - Freed:                   yes\n"
             "# - Freed in function:       %s()"
             #ifdef __GNUC__
-            " - %lu"
+            " - %p"
             #endif
             "\n"
             "# - Freed in file:           %s\n"
@@ -764,7 +764,7 @@ static void memdebug_print_object( struct memdebug_object * object )
             "# \n",
             object->free_func,
             #ifdef __GNUC__
-            ( unsigned long int )object->free_func_addr,
+            object->free_func_addr,
             #endif
             object->free_file,
             object->free_line
