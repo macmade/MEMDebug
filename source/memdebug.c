@@ -67,6 +67,6 @@ int main( void )
     x = 0;
     printf( "%i", x[ 0 ] );
     
-    return 0;
+    return EXIT_SUCCESS;
 }
 
