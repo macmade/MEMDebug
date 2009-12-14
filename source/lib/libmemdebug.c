@@ -727,7 +727,7 @@ static void memdebug_print_object( struct memdebug_object * object )
 {
     /* Common information */
     printf(
-        "# - Address:                 %lu\n"
+        "# - Address:                 %p\n"
         "# - Size:                    %lu\n"
         "# \n"
         "# - Allocated in function:   %s()"
