@@ -71,6 +71,11 @@
 /* Horizontal ruler */
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
+/* The supported allocation types */
+#define MEMDEBUG_ALLOC_TYPE_MALLOC  "malloc"
+#define MEMDEBUG_ALLOC_TYPE_CALLOC  "calloc"
+#define MEMDEBUG_ALLOC_TYPE_REALLOC "realloc"
+
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
 
@@ -97,6 +102,9 @@ struct memdebug_object
     
     /* The name of the function in which the object was allocated */
     const char * alloc_func;
+    
+    /* The allocation type (MEMDEBUG_ALLOC_TYPE_XXX) */
+    const char * alloc_type;
     
     /* The name of the file in which the object was freed */
     const char * free_file;
@@ -347,6 +355,7 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
     object->alloc_file = file;
     object->alloc_line = line;
     object->alloc_func = func;
+    object->alloc_type = MEMDEBUG_ALLOC_TYPE_MALLOC;
     object->free       = FALSE;
     
     /* Checks if we are using GCC */
@@ -399,6 +408,7 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     object->alloc_file = file;
     object->alloc_line = line;
     object->alloc_func = func;
+    object->alloc_type = MEMDEBUG_ALLOC_TYPE_CALLOC;
     object->free       = FALSE;
     
     /* Checks if we are using GCC */
@@ -471,6 +481,7 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
     object->alloc_file = file;
     object->alloc_line = line;
     object->alloc_func = func;
+    object->alloc_type = MEMDEBUG_ALLOC_TYPE_REALLOC;
     object->free       = FALSE;
     
     /* Checks if we are using GCC */
@@ -971,8 +982,10 @@ static void memdebug_print_object( struct memdebug_object * object )
 {
     /* Common information */
     printf(
+        "# \n"
         "# - Address:                 %p\n"
         "# - Size:                    %lu\n"
+        "# - Allocation type:         %s\n"
         "# \n"
         "# - Allocated in function:   %s()"
         #ifdef __GNUC__
@@ -984,6 +997,7 @@ static void memdebug_print_object( struct memdebug_object * object )
         "# \n",
         object->ptr,
         ( unsigned long int )object->size,
+        object->alloc_type,
         object->alloc_func,
         #ifdef __GNUC__
         object->alloc_func_addr,
