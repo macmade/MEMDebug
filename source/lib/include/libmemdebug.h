@@ -65,7 +65,7 @@
 #endif
 
 /* Checks if MEMDebug must be activated */
-#ifdef MEMDEBUG
+#if MEMDEBUG
     
 /* Redefines the memory functions, so everything is passed to MEMDebug */
 #define malloc( size )           memdebug_malloc( size, __FILE__, __LINE__, __func__ )
