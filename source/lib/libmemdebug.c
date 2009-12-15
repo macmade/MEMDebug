@@ -836,6 +836,10 @@ static void askForDebugCommand( void )
     } else if( c == 'q' || c == 'Q' ) {
         
         /* Aborts the program execution */
+        printf(
+            "\n"
+            "Program execution stopped\n"
+        );
         exit( EXIT_FAILURE );
         
     } else {
