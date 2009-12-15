@@ -49,6 +49,16 @@ int main( void )
     int i;
     unsigned char * x;
     unsigned char * y;
+    unsigned char * z;
+    
+    /* Checks if the alloca function is available */
+    #ifdef _ALLOCA_H_
+    
+    /* Allocates some memory in the stack */
+    z = alloca( 10 * sizeof( unsigned char ) );
+    
+    #endif
+    
     
     /* Allocates some memory */
     x = ( unsigned char * )malloc( 2048 * sizeof( unsigned char ) );

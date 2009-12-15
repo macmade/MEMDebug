@@ -62,6 +62,11 @@
 #undef realloc
 #undef free
 
+/* Undefines alloca if it has been defined (GCC 3 and greater) */
+#if defined( _ALLOCA_H_ ) && defined( __GNUC__ ) && __GNUC__ >= 3
+#undef alloca
+#endif
+
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
 #define MEMDEBUG_INIT_CHECK                                                     \
     if( memdebug_inited == FALSE ) {                                            \
@@ -72,9 +77,11 @@
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
 /* The supported allocation types */
-#define MEMDEBUG_ALLOC_TYPE_MALLOC  "malloc"
-#define MEMDEBUG_ALLOC_TYPE_CALLOC  "calloc"
-#define MEMDEBUG_ALLOC_TYPE_REALLOC "realloc"
+#define MEMDEBUG_ALLOC_TYPE_MALLOC          "malloc"
+#define MEMDEBUG_ALLOC_TYPE_CALLOC          "calloc"
+#define MEMDEBUG_ALLOC_TYPE_REALLOC         "realloc"
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN  "alloca (built-in)"
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA          "alloca"
 
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
@@ -557,6 +564,105 @@ void memdebug_free( void * ptr, const char * file, const int line, const char * 
     free( ptr );
 }
 
+/* Checks if the alloca function is available */
+#ifdef _ALLOCA_H_
+
+/* Checks if we are using GCC 3 or greater */
+#if defined( __GNUC__ ) && __GNUC__ >= 3
+
+void * memdebug_builtin_alloca( size_t size, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    struct memdebug_object * object;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )__builtin_alloca( size ) ) ) {
+        
+        memdebug_warning(
+            "The call to __builtin_alloca() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        return ptr;
+    }
+    
+    /* Creates a new memory record object for the allocated area */
+    object             = memdebug_new_object();
+    object->ptr        = ptr;
+    object->size       = size;
+    object->alloc_file = file;
+    object->alloc_line = line;
+    object->alloc_func = func;
+    object->alloc_type = MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN;
+    object->free       = TRUE;
+    
+    /* Checks if we are using GCC */
+    #ifdef __GNUC__
+        
+        /* Stores the address of the caller function */
+        object->alloc_func_addr = __builtin_return_address( 1 );
+        
+    #endif
+    
+    /* Allocations made with alloca do not need to be counted as normal allocations */
+    memdebug_trace->num_objects--;
+    memdebug_trace->num_active--;
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+#else 
+
+void * memdebug_alloca( size_t size, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    struct memdebug_object * object;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )alloca( size ) ) ) {
+        
+        memdebug_warning(
+            "The call to alloca() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        return ptr;
+    }
+    
+    /* Creates a new memory record object for the allocated area */
+    object             = memdebug_new_object();
+    object->ptr        = ptr;
+    object->size       = size;
+    object->alloc_file = file;
+    object->alloc_line = line;
+    object->alloc_func = func;
+    object->alloc_type = MEMDEBUG_ALLOC_TYPE_ALLOCA;
+    object->free       = TRUE;
+    
+    /* Checks if we are using GCC */
+    #ifdef __GNUC__
+        
+        /* Stores the address of the caller function */
+        object->alloc_func_addr = __builtin_return_address( 1 );
+        
+    #endif
+    
+    /* Allocations made with alloca do not need to be counted as normal allocations */
+    memdebug_trace->num_objects--;
+    memdebug_trace->num_active--;
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+#endif
+#endif
+
 /**
  * Displays an hexadecimal and ASCII representation of a memory record object
  * 
@@ -1009,24 +1115,38 @@ static void memdebug_print_object( struct memdebug_object * object )
     /* Checks if the object was freed */
     if( object->free == TRUE ) {
         
-        /* Free informations */
-        printf(
-            "# - Freed:                   yes\n"
-            "# - Freed in function:       %s()"
-            #ifdef __GNUC__
-            " - %p"
-            #endif
-            "\n"
-            "# - Freed in file:           %s\n"
-            "# - Freed at line:           %i\n"
-            "# \n",
-            object->free_func,
-            #ifdef __GNUC__
-            object->free_func_addr,
-            #endif
-            object->free_file,
-            object->free_line
-        );
+        /* Checks if the object was allocated with alloca */
+        if(    strcmp( object->alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA )         == 0
+            || strcmp( object->alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN ) == 0
+        ) {
+            
+            /* Free informations not available */
+            printf(
+                "# - Freed:                   auto\n"
+                "# \n"
+            );
+            
+        } else {
+            
+            /* Free informations */
+            printf(
+                "# - Freed:                   yes\n"
+                "# - Freed in function:       %s()"
+                #ifdef __GNUC__
+                " - %p"
+                #endif
+                "\n"
+                "# - Freed in file:           %s\n"
+                "# - Freed at line:           %i\n"
+                "# \n",
+                object->free_func,
+                #ifdef __GNUC__
+                object->free_func_addr,
+                #endif
+                object->free_file,
+                object->free_line
+            );
+        }
         
     } else {
         

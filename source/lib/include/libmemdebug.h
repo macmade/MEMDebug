@@ -54,7 +54,6 @@
 #define __func__ "<unknown>"
 
 #endif
-
 #else
 
 /* Function name cannot be used */
@@ -67,12 +66,29 @@
 /* Checks if MEMDebug must be activated */
 #if MEMDEBUG
     
-/* Redefines the memory functions, so everything is passed to MEMDebug */
-#define malloc( size )           memdebug_malloc( size, __FILE__, __LINE__, __func__ )
-#define calloc( size1, size2 )   memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
-#define realloc( pointer, size ) memdebug_realloc( pointer, size, __FILE__, __LINE__, __func__ )
-#define free( pointer )          memdebug_free( pointer, __FILE__, __LINE__, __func__ )
+/* Redefines the memory functions */
+#define malloc( size )              memdebug_malloc( size, __FILE__, __LINE__, __func__ )
+#define calloc( size1, size2 )      memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
+#define realloc( pointer, size )    memdebug_realloc( pointer, size, __FILE__, __LINE__, __func__ )
+#define free( pointer )             memdebug_free( pointer, __FILE__, __LINE__, __func__ )
 
+/* Checks if the alloca function is available */
+#ifdef _ALLOCA_H_
+
+/* Checks if we are using GCC 3 or greater */
+#if defined( __GNUC__ ) && __GNUC__ >= 3
+
+/* Redefines the built-in alloca function  */
+#undef alloca
+#define alloca( size )              memdebug_builtin_alloca( size, __FILE__, __LINE__, __func__ )
+
+#else 
+
+/* Redefine the alloca function */
+#define alloca( size )              memdebug_alloca( size, __FILE__, __LINE__, __func__ )
+
+#endif
+#endif
 #endif
 
 /* Defines the original pool size if it's not already defined */
@@ -90,6 +106,23 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
 void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func );
 void * memdebug_realloc( void * ptr, size_t size, const char * file, const int line, const char * func );
 void   memdebug_free( void * ptr, const char * file, int line, const char * func );
+
+/* Checks if the alloca function is available */
+#ifdef _ALLOCA_H_
+
+/* Checks if we are using GCC 3 or greater */
+#if defined( __GNUC__ ) && __GNUC__ >= 3
+
+/* Prototype for the alloca function (built-in) */
+void * memdebug_builtin_alloca( size_t size, const char * file, const int line, const char * func );
+
+#else 
+
+/* Prototype for the alloca function */
+void * memdebug_alloca( size_t size, const char * file, const int line, const char * func );
+
+#endif
+#endif
 
 /* Debug output functions */
 void memdebug_print_status( void );
