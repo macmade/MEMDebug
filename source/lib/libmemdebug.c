@@ -152,7 +152,7 @@ static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void askForDebugCommand( void );
 static void memdebug_sig_handler( int id );
-static void memdebug_warning( const char * str, const char * file, const int line, const char * func );
+static void memdebug_warning( const char * str, const char * file, const int line, const char * func, ... );
 static void memdebug_print_object( struct memdebug_object * object );
 
 /* Checks if we can have a backtrace */
@@ -180,7 +180,7 @@ static void memdebug_fatal( const char * format, ... )
     va_start( ap, format );
     
     /* Prints the error message */
-    vfprintf( stderr, format, ap );
+    vprintf( format, ap );
     
     /* Aborts the program execution */
     va_end( ap );
@@ -331,10 +331,11 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
     if( NULL == ( ptr = ( void * )malloc( size ) ) ) {
         
         memdebug_warning(
-            "The call to malloc() failed",
+            "The call to malloc() failed. Reason: %s",
             file,
             line,
-            func
+            func,
+            strerror( errno )
         );
         return ptr;
     }
@@ -381,6 +382,13 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     /* Allocates memory */
     if( NULL == ( ptr = ( void * )calloc( size1, size2 ) ) ) {
         
+        memdebug_warning(
+            "The call to calloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
         return ptr;
     }
     
@@ -447,6 +455,13 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
     /* Rellocates memory */
     if( NULL == ( ptr = ( void * )realloc( ptr, size ) ) ) {
         
+        memdebug_warning(
+            "The call to realloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
         return ptr;
     }
     
@@ -905,26 +920,38 @@ static void memdebug_sig_handler( int id )
  * @param   const char *    The file concerned by the warning
  * @param   const int       The line number concerned by the warning
  * @param   const char *    The function concerned by the warning
+ * @param   ...             The parameters for the warning message, if any
  * @return  void
  */
-static void memdebug_warning( const char * str, const char * file, const int line, const char * func )
+static void memdebug_warning( const char * str, const char * file, const int line, const char * func, ... )
 {
+    va_list ap;
+    
+    /* Gets the variable arguments */
+    va_start( ap, func );
+    
     /* Issues the warning message */
     printf(
         MEMDEBUG_HR
         "# MEMDebug: WARNING\n"
         MEMDEBUG_HR
         "# \n"
-        "# %s\n"
+        "# "
+    );
+    vprintf( str, ap );
+    printf(
+        "\n"
         "# \n"
         "# Function:    %s()\n"
         "# File:        %s\n"
         "# Line:        %i\n",
-        str,
         func,
         file,
         line
     );
+    
+    /* Cleanup */
+    va_end( ap );
     
     /* Asks for a debug command */
     askForDebugCommand();
