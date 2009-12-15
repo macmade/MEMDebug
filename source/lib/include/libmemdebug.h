@@ -72,7 +72,7 @@
 #define calloc( size1, size2 )   memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
 #define realloc( pointer, size ) memdebug_realloc( pointer, size, __FILE__, __LINE__, __func__ )
 #define free( pointer )          memdebug_free( pointer, __FILE__, __LINE__, __func__ )
-    
+
 #endif
 
 /* Defines the original pool size if it's not already defined */
