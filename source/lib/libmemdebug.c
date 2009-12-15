@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <signal.h>
+#include <stdarg.h>
 
 /* Checks if we can have a backtrace, using execinfo.h */
 #if defined( __APPLE__ )
@@ -60,11 +61,6 @@
 #undef calloc
 #undef realloc
 #undef free
-
-/* Macro for the internal fatal errors (just in case) */
-#define MEMDEBUG_FATAL( ... )                                                   \
-    fprintf( stderr, __VA_ARGS__ );                                             \
-    exit( EXIT_FAILURE );
 
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
 #define MEMDEBUG_INIT_CHECK                                                     \
@@ -94,22 +90,22 @@ struct memdebug_object
     memdebug_bool free;
     
     /* The name of the file in which the object was allocated */
-    char * alloc_file;
+    const char * alloc_file;
     
     /* The line of the file in which the object was allocated */
     int alloc_line;
     
     /* The name of the function in which the object was allocated */
-    char * alloc_func;
+    const char * alloc_func;
     
     /* The name of the file in which the object was freed */
-    char * free_file;
+    const char * free_file;
     
     /* The line of the file in which the object was freed */
     int free_line;
     
     /* The name of the function in which the object was freed */
-    char * free_func;
+    const char * free_func;
     
     /* Checks if we are using GCC */
     #ifdef __GNUC__
@@ -149,6 +145,7 @@ struct memdebug_pool
 };
 
 /* Prototypes for the internal (private) functions */
+static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
 static struct memdebug_object * memdebug_new_object( void );
 static struct memdebug_object * memdebug_get_object( void * ptr );
@@ -168,6 +165,27 @@ static memdebug_bool memdebug_inited;
 
 /* The MEMDebug memory record pool */
 static struct memdebug_pool * memdebug_trace;
+
+/**
+ * Internal fatal error
+ * 
+ * @param   const char *    The error message
+ * @param   ...             The format parameters, if any
+ */
+static void memdebug_fatal( const char * format, ... )
+{
+    va_list ap;
+    
+    /* Gets the variable arguments */
+    va_start( ap, format );
+    
+    /* Prints the error message */
+    vfprintf( stderr, format, ap );
+    
+    /* Aborts the program execution */
+    va_end( ap );
+    exit( EXIT_FAILURE );
+}
 
 /**
  * Initializes MEMDebug
@@ -193,7 +211,7 @@ static void memdebug_init( void )
     /* Handles segmentation faults ( SIGSEGV ) */
     if( sigaction( SIGSEGV, &sa1, &sa2 ) != 0 ) {
         
-        MEMDEBUG_FATAL(
+        memdebug_fatal(
             "MEMDebug error: cannot set a handler for SIGSEGV\n"
         );
     }
@@ -201,7 +219,7 @@ static void memdebug_init( void )
     /* Handles bus errors ( SIGBUS ) */
     if( sigaction( SIGBUS, &sa1, &sa2 ) != 0 ) {
         
-        MEMDEBUG_FATAL(
+        memdebug_fatal(
             "MEMDebug error: cannot set a handler for SIGBUS\n"
         );
     }
@@ -209,7 +227,7 @@ static void memdebug_init( void )
     /* Allocates the memory record pool structure */
     if( NULL == ( memdebug_trace = ( struct memdebug_pool * )calloc( 1, sizeof( struct memdebug_pool ) ) ) ) {
         
-        MEMDEBUG_FATAL(
+        memdebug_fatal(
             "MEMDebug error: cannot initialize the trace pool. Reason: %s\n",
             strerror( errno )
         );
@@ -218,7 +236,7 @@ static void memdebug_init( void )
     /* Allocates room for memory record objects */
     if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )calloc( MEMDEBUG_POOL_SIZE, sizeof( struct memdebug_object ) ) ) ) {
         
-        MEMDEBUG_FATAL(
+        memdebug_fatal(
             "MEMDebug error: cannot initialize the trace pool. Reason: %s\n",
             strerror( errno )
         );
@@ -250,7 +268,7 @@ static struct memdebug_object * memdebug_new_object( void )
         /* No, let's reallocate some memory */
         if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )realloc( memdebug_trace->objects, memdebug_trace->pool_size + MEMDEBUG_POOL_SIZE ) ) ) {
             
-            MEMDEBUG_FATAL(
+            memdebug_fatal(
                 "MEMDebug error: cannot reallocate the MEMDebug pool. Reason: %s\n",
                 strerror( errno )
             );
@@ -309,7 +327,7 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
     void * ptr;
     struct memdebug_object * object;
     
-    // Allocates memory
+    /* Allocates memory */
     if( NULL == ( ptr = ( void * )malloc( size ) ) ) {
         
         memdebug_warning(
@@ -360,7 +378,7 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     void * ptr;
     struct memdebug_object * object;
     
-    // Allocates memory
+    /* Allocates memory */
     if( NULL == ( ptr = ( void * )calloc( size1, size2 ) ) ) {
         
         return ptr;
@@ -426,7 +444,7 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
         );
     }
     
-    // Rellocates memory
+    /* Rellocates memory */
     if( NULL == ( ptr = ( void * )realloc( ptr, size ) ) ) {
         
         return ptr;
@@ -598,10 +616,19 @@ void memdebug_backtrace( unsigned int skip_levels )
     size_t size;
     size_t i;
     size_t j;
-    void * trace[ MEMDEBUG_BACKTRACE_SIZE + skip_levels ];
+    void ** trace;
     char ** symbols;
     char * symbol;
     unsigned long int frame_num;
+    
+    /* Allocates enough memory for the backtrace informations */
+    if( NULL == ( trace = calloc( MEMDEBUG_BACKTRACE_SIZE + skip_levels, sizeof( void * ) ) ) ) {
+        
+        memdebug_fatal(
+            "MEMDebug error: cannot allocate memory for the backtrace. Reason: %s\n",
+            strerror( errno )
+        );
+    }
     
     /* Gets the backtrace */
     size    = backtrace( trace, MEMDEBUG_BACKTRACE_SIZE + skip_levels );
@@ -695,7 +722,8 @@ void memdebug_backtrace( unsigned int skip_levels )
         MEMDEBUG_HR
     );
     
-    /* Frees the memory symbol strings */
+    /* Frees the allocated memory for the backtrace and the backtrace symbols */
+    free( trace );
     free( symbols );
 }
 
@@ -718,12 +746,16 @@ static void askForDebugCommand( void )
         "#     - c : Default: continue the program execution\n"
         "#     - q : Abort the program execution\n"
         "#     - s : Display the status of the memory allocations\n"
-        
-        /* Checks if we can have a backtrace */
-        #ifdef MEMDEBUG_HAVE_EXECINFO_H
+    );
+    
+    /* Checks if we can have a backtrace */
+    #ifdef MEMDEBUG_HAVE_EXECINFO_H
+    printf(
         "#     - t : Display the backtrace (function call stack)\n"
-        #endif
-        
+    );
+    #endif
+    
+    printf(
         "#     - p : Display all memory records (active and free)\n"
         "#     - a : Display only the active memory records\n"
         "#     - f : Display only the freed memory records\n"
@@ -990,15 +1022,17 @@ void memdebug_print_status( void )
         "# \n"
         "# - Total allocated objects:       %lu\n"
         "# - Number of freed objects:       %lu\n"
-        "# - Number of non-freed objects:   %lu\n"
+        "# - Number of non-freed objects:   %lu\n",
+        memdebug_trace->num_objects,
+        memdebug_trace->num_free,
+        memdebug_trace->num_active
+    );
+    printf(
         "# \n"
         "# - Total memory:                  %lu\n"
         "# - Active memory:                 %lu\n"
         "# \n"
         MEMDEBUG_HR,
-        memdebug_trace->num_objects,
-        memdebug_trace->num_free,
-        memdebug_trace->num_active,
         memdebug_trace->memory_total,
         memdebug_trace->memory_active
     );

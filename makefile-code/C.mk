@@ -69,6 +69,6 @@ LIBTOOL              = glibtool
 # Arguments for the compiler tools
 #-------------------------------------------------------------------------------
 
-ARGS_CC              = -pedantic -std=c99 -Wall -Wextra -Wbad-function-cast -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wdeclaration-after-statement -Wno-discard-qual -Wno-pointer-sign
+ARGS_CC              = -pedantic -std=c89 -Wall -Wextra -Wbad-function-cast -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wdeclaration-after-statement
 ARGS_LIBTOOL_COMPILE = --mode=compile
 ARGS_LIBTOOL_LINK    = --mode=link
