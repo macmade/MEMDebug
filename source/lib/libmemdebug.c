@@ -68,10 +68,7 @@
 #endif
 
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
-#define MEMDEBUG_INIT_CHECK                                                     \
-    if( memdebug_inited == FALSE ) {                                            \
-        memdebug_init();                                                        \
-    }
+#define MEMDEBUG_INIT_CHECK if( memdebug_inited == FALSE ) { memdebug_init(); }
 
 /* Horizontal ruler */
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
@@ -172,7 +169,7 @@ static void memdebug_print_object( struct memdebug_object * object );
 
 /* Checks if we can have a backtrace */
 #ifdef MEMDEBUG_HAVE_EXECINFO_H
-    static void memdebug_backtrace( unsigned int skip_levels );
+static void memdebug_backtrace( unsigned int skip_levels );
 #endif
 
 /* Whether MEMDebug has been inited or not */
