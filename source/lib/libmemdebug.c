@@ -603,8 +603,7 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
         
     #endif
     
-    /* Allocations made with alloca do not need to be counted as normal allocations */
-    memdebug_trace->num_objects--;
+    /* Objects allocated with alloca are automaticaly freed */
     memdebug_trace->num_active--;
     
     /* Returns the address of the allocated area */
@@ -649,8 +648,7 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
         
     #endif
     
-    /* Allocations made with alloca do not need to be counted as normal allocations */
-    memdebug_trace->num_objects--;
+    /* Objects allocated with alloca are automaticaly freed */
     memdebug_trace->num_active--;
     
     /* Returns the address of the allocated area */
