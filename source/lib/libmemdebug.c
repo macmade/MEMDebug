@@ -41,15 +41,15 @@
 /* Checks if we can have a backtrace, using execinfo.h */
 #if defined( __APPLE__ )
     
-    /* Yes - Mac OS X */
-    #include <execinfo.h>
-    #define MEMDEBUG_HAVE_EXECINFO_H
+/* Yes - Mac OS X */
+#include <execinfo.h>
+#define MEMDEBUG_HAVE_EXECINFO_H
     
 #elif defined( __GLIBC__ ) && defined( HAVE_EXECINFO_H )
     
-    /* Yes - GNU LibC */
-    #include <execinfo.h>
-    #define MEMDEBUG_HAVE_EXECINFO_H
+/* Yes - GNU LibC */
+#include <execinfo.h>
+#define MEMDEBUG_HAVE_EXECINFO_H
     
 #endif
 
@@ -134,11 +134,11 @@ struct memdebug_object
     /* Checks if we are using GCC */
     #ifdef __GNUC__
         
-        /* The address of the function in which the object was allocated */
-        void * alloc_func_addr;
-        
-        /* The address of the function in which the object was freed */
-        void * free_func_addr;
+    /* The address of the function in which the object was allocated */
+    void * alloc_func_addr;
+    
+    /* The address of the function in which the object was freed */
+    void * free_func_addr;
         
     #endif
 };
@@ -347,10 +347,10 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     
     /* Checks if we are using GCC */
     #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 2 );
-        
+    
+    /* Stores the address of the caller function */
+    object->alloc_func_addr = __builtin_return_address( 2 );
+    
     #endif
     
     /* Updates the memory usage */
@@ -518,10 +518,10 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
     
     /* Checks if we are using GCC */
     #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 1 );
-        
+    
+    /* Stores the address of the caller function */
+    object->alloc_func_addr = __builtin_return_address( 1 );
+    
     #endif
     
     /* Updates the memory usage */
@@ -575,10 +575,10 @@ void memdebug_free( void * ptr, const char * file, const int line, const char * 
     
     /* Checks if we are using GCC */
     #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->free_func_addr = __builtin_return_address( 1 );
-        
+    
+    /* Stores the address of the caller function */
+    object->free_func_addr = __builtin_return_address( 1 );
+    
     #endif
     
     /* Updates the memory usage */
@@ -802,7 +802,8 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
  */
 void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
 {
-    return NULL;
+    /* TEMP - Needs implementation */
+    return GC_realloc( ptr, size );
 }
 
 #endif
