@@ -159,7 +159,7 @@ struct memdebug_pool
 /* Prototypes for the internal (private) functions */
 static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
-static struct memdebug_object * memdebug_new_object( void );
+static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, const char * alloc_type );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void askForDebugCommand( void );
@@ -267,10 +267,18 @@ static void memdebug_init( void )
 /**
  * Creates a new memory record object in the pool
  * 
+ * @param   void *          The pointer to the allocated memory area
+ * @param   size_t          The size of the allocated memory area
+ * @param   const char *    The file in which the allocation was made
+ * @param   const int       The line of the file in which the allocation was made
+ * @param   const char *    The name of the function in which the allocation was made
+ * @param   const char *    The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
  * @return  struct memdebug_object *    The new memory record object
  */
-static struct memdebug_object * memdebug_new_object( void )
+static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, const char * alloc_type )
 {
+    struct memdebug_object * object;
+    
     /* Initialization check */
     MEMDEBUG_INIT_CHECK;
     
@@ -294,8 +302,43 @@ static struct memdebug_object * memdebug_new_object( void )
     memdebug_trace->num_objects++;
     memdebug_trace->num_active++;
     
+    object = &memdebug_trace->objects[ memdebug_trace->num_objects - 1 ];
+    
+    object->ptr        = ptr;
+    object->size       = size;
+    object->alloc_file = file;
+    object->alloc_line = line;
+    object->alloc_func = func;
+    object->alloc_type = alloc_type;
+    
+    /* Checks if the object was allocated with alloca */
+    if(    strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA )         == 0
+        || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN ) == 0
+    ) {
+        
+        /* Objects allocated with alloca are automatically freed */
+        object->free = TRUE;
+        
+    } else {
+        
+        /* Object needs to be manually freed */
+        object->free = FALSE;
+    }
+    
+    /* Checks if we are using GCC */
+    #ifdef __GNUC__
+        
+        /* Stores the address of the caller function */
+        object->alloc_func_addr = __builtin_return_address( 2 );
+        
+    #endif
+    
+    /* Updates the memory usage */
+    memdebug_trace->memory_total  += size;
+    memdebug_trace->memory_active += size;
+    
     /* Returns the address of the new object */
-    return &memdebug_trace->objects[ memdebug_trace->num_objects - 1 ];    
+    return object;    
 }
 
 /**
@@ -332,12 +375,12 @@ static struct memdebug_object * memdebug_get_object( void * ptr )
  * @param   size_t          The memory size to allocate
  * @param   const char *    The file in which the call was made
  * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
  * @return  void *          A pointer to the allocated memory area
  */
 void * memdebug_malloc( size_t size, const char * file, const int line, const char * func )
 {
     void * ptr;
-    struct memdebug_object * object;
     
     /* Allocates memory */
     if( NULL == ( ptr = ( void * )malloc( size ) ) ) {
@@ -349,30 +392,12 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
             func,
             strerror( errno )
         );
-        return ptr;
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_MALLOC );
     }
-    
-    /* Creates a new memory record object for the allocated area */
-    object             = memdebug_new_object();
-    object->ptr        = ptr;
-    object->size       = size;
-    object->alloc_file = file;
-    object->alloc_line = line;
-    object->alloc_func = func;
-    object->alloc_type = MEMDEBUG_ALLOC_TYPE_MALLOC;
-    object->free       = FALSE;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 1 );
-        
-    #endif
-    
-    /* Updates the memory usage */
-    memdebug_trace->memory_total  += size;
-    memdebug_trace->memory_active += size;
     
     /* Returns the address of the allocated area */
     return ptr;
@@ -385,12 +410,12 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
  * @param   size_t          The memory size to allocate
  * @param   const char *    The file in which the call was made
  * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
  * @return  void *          A pointer to the allocated memory area
  */
 void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func )
 {
     void * ptr;
-    struct memdebug_object * object;
     
     /* Allocates memory */
     if( NULL == ( ptr = ( void * )calloc( size1, size2 ) ) ) {
@@ -402,30 +427,12 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
             func,
             strerror( errno )
         );
-        return ptr;
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_CALLOC );
     }
-    
-    /* Creates a new memory record object for the allocated area */
-    object             = memdebug_new_object();
-    object->ptr        = ptr;
-    object->size       = size1 * size2;
-    object->alloc_file = file;
-    object->alloc_line = line;
-    object->alloc_func = func;
-    object->alloc_type = MEMDEBUG_ALLOC_TYPE_CALLOC;
-    object->free       = FALSE;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 1 );
-        
-    #endif
-    
-    /* Updates the memory usage */
-    memdebug_trace->memory_total  += size1 * size2;
-    memdebug_trace->memory_active += size1 * size2;
     
     /* Returns the address of the allocated area */
     return ptr;
@@ -438,6 +445,7 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
  * @param   size_t          The new memory size to allocate
  * @param   const char *    The file in which the call was made
  * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
  * @return  void *          A pointer to the reallocated memory area
  */
 void * memdebug_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
@@ -510,6 +518,7 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
  * @param   void *          The address of the memory area to free
  * @param   const char *    The file in which the call was made
  * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
  * @return  void
  */
 void memdebug_free( void * ptr, const char * file, const int line, const char * func )
@@ -567,10 +576,18 @@ void memdebug_free( void * ptr, const char * file, const int line, const char * 
 /* Checks if we are using GCC 3 or greater */
 #if defined( __GNUC__ ) && __GNUC__ >= 3
 
+/**
+ * Allocates some memory in the stack
+ * 
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
 void * memdebug_builtin_alloca( size_t size, const char * file, const int line, const char * func )
 {
     void * ptr;
-    struct memdebug_object * object;
     
     /* Allocates memory */
     if( NULL == ( ptr = ( void * )__builtin_alloca( size ) ) ) {
@@ -582,29 +599,15 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
             func,
             strerror( errno )
         );
-        return ptr;
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN );
+        
+        /* Objects allocated with alloca are automaticaly freed */
+        memdebug_trace->num_active--;
     }
-    
-    /* Creates a new memory record object for the allocated area */
-    object             = memdebug_new_object();
-    object->ptr        = ptr;
-    object->size       = size;
-    object->alloc_file = file;
-    object->alloc_line = line;
-    object->alloc_func = func;
-    object->alloc_type = MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN;
-    object->free       = TRUE;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 1 );
-        
-    #endif
-    
-    /* Objects allocated with alloca are automaticaly freed */
-    memdebug_trace->num_active--;
     
     /* Returns the address of the allocated area */
     return ptr;
@@ -612,10 +615,18 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
 
 #else 
 
+/**
+ * Allocates some memory in the stack
+ * 
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
 void * memdebug_alloca( size_t size, const char * file, const int line, const char * func )
 {
     void * ptr;
-    struct memdebug_object * object;
     
     /* Allocates memory */
     if( NULL == ( ptr = ( void * )alloca( size ) ) ) {
@@ -627,29 +638,15 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
             func,
             strerror( errno )
         );
-        return ptr;
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA );
+        
+        /* Objects allocated with alloca are automaticaly freed */
+        memdebug_trace->num_active--;
     }
-    
-    /* Creates a new memory record object for the allocated area */
-    object             = memdebug_new_object();
-    object->ptr        = ptr;
-    object->size       = size;
-    object->alloc_file = file;
-    object->alloc_line = line;
-    object->alloc_func = func;
-    object->alloc_type = MEMDEBUG_ALLOC_TYPE_ALLOCA;
-    object->free       = TRUE;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-        
-        /* Stores the address of the caller function */
-        object->alloc_func_addr = __builtin_return_address( 1 );
-        
-    #endif
-    
-    /* Objects allocated with alloca are automaticaly freed */
-    memdebug_trace->num_active--;
     
     /* Returns the address of the allocated area */
     return ptr;
