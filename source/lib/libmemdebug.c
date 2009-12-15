@@ -47,7 +47,7 @@
     
 #elif defined( __GLIBC__ ) && defined( HAVE_EXECINFO_H )
     
-    /* GNU LibC */
+    /* Yes - GNU LibC */
     #include <execinfo.h>
     #define MEMDEBUG_HAVE_EXECINFO_H
     
