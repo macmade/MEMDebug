@@ -69,8 +69,8 @@
 /* Redefines the memory functions */
 #define malloc( size )              memdebug_malloc( size, __FILE__, __LINE__, __func__ )
 #define calloc( size1, size2 )      memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
-#define realloc( pointer, size )    memdebug_realloc( pointer, size, __FILE__, __LINE__, __func__ )
-#define free( pointer )             memdebug_free( pointer, __FILE__, __LINE__, __func__ )
+#define realloc( ptr, size )        memdebug_realloc( ptr, size, __FILE__, __LINE__, __func__ )
+#define free( ptr )                 memdebug_free( ptr, __FILE__, __LINE__, __func__ )
 
 /* Checks if the alloca function is available */
 #ifdef _ALLOCA_H_
@@ -89,6 +89,17 @@
 
 #endif
 #endif
+
+/* Checks if the Objective-C garbage collector is present */
+#if defined( OBJC_WITH_GC ) && OBJC_WITH_GC
+
+/* Redefines the Objective-C garbage collector memory functions */
+#define GC_malloc( size )           memdebug_gc_malloc( size, __FILE__, __LINE__, __func__ )
+#define GC_malloc_atomic( size )    memdebug_gc_malloc_atomic( size, __FILE__, __LINE__, __func__ )
+#define GC_calloc( size1, size2 )   memdebug_gc_calloc( size1, size2, __FILE__, __LINE__, __func__ )
+#define GC_realloc( ptr, size )     memdebug_gc_realloc( ptr, size, __FILE__, __LINE__, __func__ )
+
+#endif
 #endif
 
 /* Defines the original pool size if it's not already defined */
@@ -101,7 +112,7 @@
 #define MEMDEBUG_BACKTRACE_SIZE 100    
 #endif
 
-/* Memory function prototypes - Never call them directly */
+/* Prototypes for the standard memory functions */
 void * memdebug_malloc( size_t size, const char * file, const int line, const char * func );
 void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func );
 void * memdebug_realloc( void * ptr, size_t size, const char * file, const int line, const char * func );
@@ -113,7 +124,7 @@ void   memdebug_free( void * ptr, const char * file, int line, const char * func
 /* Checks if we are using GCC 3 or greater */
 #if defined( __GNUC__ ) && __GNUC__ >= 3
 
-/* Prototype for the alloca function (built-in) */
+/* Prototype for the alloca function */
 void * memdebug_builtin_alloca( size_t size, const char * file, const int line, const char * func );
 
 #else 
@@ -122,6 +133,17 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
 void * memdebug_alloca( size_t size, const char * file, const int line, const char * func );
 
 #endif
+#endif
+
+/* Checks if the Objective-C garbage collector is present */
+#if defined( OBJC_WITH_GC ) && OBJC_WITH_GC
+
+/* Prototypes for the Objective-C garbage collector memory functions */
+void * memdebug_gc_malloc( size_t size, const char * file, const int line, const char * func );
+void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line, const char * func );
+void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func );
+void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func );
+
 #endif
 
 /* Debug output functions */

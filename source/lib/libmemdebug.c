@@ -56,15 +56,23 @@
 /* Local includes */
 #include "libmemdebug.h"
 
-/* Undefines the macros, so we can use the real memory functions */
+/* Undefines the standard memory macros, so we can use the real memory functions */
 #undef malloc
 #undef calloc
 #undef realloc
 #undef free
 
-/* Undefines alloca if it has been defined (GCC 3 and greater) */
+/* Undefines the alloca macro if it has been defined (GCC 3 and greater) */
 #if defined( _ALLOCA_H_ ) && defined( __GNUC__ ) && __GNUC__ >= 3
 #undef alloca
+#endif
+
+/* Undefines the Objective-C garbage collector memory macros if they have been defined */
+#if defined( OBJC_WITH_GC ) && OBJC_WITH_GC
+#undef GC_malloc
+#undef GC_malloc_atomic
+#undef GC_calloc
+#undef GC_realloc
 #endif
 
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
@@ -74,11 +82,15 @@
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
 /* The supported allocation types */
-#define MEMDEBUG_ALLOC_TYPE_MALLOC          "malloc"
-#define MEMDEBUG_ALLOC_TYPE_CALLOC          "calloc"
-#define MEMDEBUG_ALLOC_TYPE_REALLOC         "realloc"
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN  "alloca (built-in)"
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA          "alloca"
+#define MEMDEBUG_ALLOC_TYPE_MALLOC                  "malloc"
+#define MEMDEBUG_ALLOC_TYPE_CALLOC                  "calloc"
+#define MEMDEBUG_ALLOC_TYPE_REALLOC                 "realloc"
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          "alloca (built-in)"
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  "alloca"
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          "malloc (Objective-C / GC)"
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   "atomic malloc (Objective-C / GC)"
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          "calloc (Objective-C / GC)"
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         "realloc (Objective-C / GC)"
 
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
@@ -317,6 +329,14 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     ) {
         
         /* Objects allocated with alloca are automatically freed */
+        object->free = TRUE;
+        
+    } else if( strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC )        == 0
+            || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC ) == 0
+            || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC )        == 0
+    ) {
+        
+        /* Garbage collector is in use, so the object will be automatically freed */
         object->free = TRUE;
         
     } else {
@@ -653,6 +673,138 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
 }
 
 #endif
+#endif
+
+/* Checks if the Objective-C garbage collector is present */
+#if defined( OBJC_WITH_GC ) && OBJC_WITH_GC
+
+/**
+ * Allocates some memory
+ * 
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
+void * memdebug_gc_malloc( size_t size, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )GC_malloc( size ) ) ) {
+        
+        memdebug_warning(
+            "The call to GC_malloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC );
+        
+        /* Garbage collector is in use, so the object will be automatically freed */
+        memdebug_trace->num_active--;
+    }
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+/**
+ * Allocates some memory
+ * 
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
+void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )GC_malloc_atomic( size ) ) ) {
+        
+        memdebug_warning(
+            "The call to GC_malloc_atomic() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC );
+        
+        /* Garbage collector is in use, so the object will be automatically freed */
+        memdebug_trace->num_active--;
+    }
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+/**
+ * Allocates some memory
+ * 
+ * @param   size_t          The number of time to allocate the memory size
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
+void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )GC_calloc( size1, size2 ) ) ) {
+        
+        memdebug_warning(
+            "The call to GC_calloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC );
+        
+        /* Garbage collector is in use, so the object will be automatically freed */
+        memdebug_trace->num_active--;
+    }
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+/**
+ * Reallocates a memory area
+ * 
+ * @param   void *          The address of the original memory area
+ * @param   size_t          The new memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the reallocated memory area
+ */
+void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
+{
+    return NULL;
+}
+
 #endif
 
 /**
