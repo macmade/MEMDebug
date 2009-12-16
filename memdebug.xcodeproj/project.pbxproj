@@ -1,0 +1,180 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXFileReference section */
+		059C85A610D859C0000599EE /* libmemdebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libmemdebug.h; sourceTree = "<group>"; };
+		059C85A710D859C0000599EE /* libmemdebug.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libmemdebug.c; sourceTree = "<group>"; };
+		059C85A810D859C0000599EE /* memdebug.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memdebug.c; sourceTree = "<group>"; };
+		059C85AA10D859EC000599EE /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		059C85AC10D859EC000599EE /* C++.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "C++.mk"; sourceTree = "<group>"; };
+		059C85AD10D859EC000599EE /* C.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = C.mk; sourceTree = "<group>"; };
+		059C85AE10D859EC000599EE /* Objective-C.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "Objective-C.mk"; sourceTree = "<group>"; };
+		059C85AF10D859EC000599EE /* makefile-config.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "makefile-config.mk"; sourceTree = "<group>"; };
+		059C85B110D859EC000599EE /* en.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = en.mk; sourceTree = "<group>"; };
+		059C85B210D859EC000599EE /* fr.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = fr.mk; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		059C85A210D859C0000599EE /* source */ = {
+			isa = PBXGroup;
+			children = (
+				059C85A310D859C0000599EE /* include */,
+				059C85A410D859C0000599EE /* lib */,
+				059C85A810D859C0000599EE /* memdebug.c */,
+			);
+			path = source;
+			sourceTree = "<group>";
+		};
+		059C85A310D859C0000599EE /* include */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		059C85A410D859C0000599EE /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				059C85A510D859C0000599EE /* include */,
+				059C85A710D859C0000599EE /* libmemdebug.c */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		059C85A510D859C0000599EE /* include */ = {
+			isa = PBXGroup;
+			children = (
+				059C85A610D859C0000599EE /* libmemdebug.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		059C85A910D859C9000599EE /* makefiles */ = {
+			isa = PBXGroup;
+			children = (
+				059C85AA10D859EC000599EE /* makefile */,
+				059C85AB10D859EC000599EE /* makefile-code */,
+				059C85AF10D859EC000599EE /* makefile-config.mk */,
+				059C85B010D859EC000599EE /* makefile-lang */,
+			);
+			name = makefiles;
+			sourceTree = "<group>";
+		};
+		059C85AB10D859EC000599EE /* makefile-code */ = {
+			isa = PBXGroup;
+			children = (
+				059C85AC10D859EC000599EE /* C++.mk */,
+				059C85AD10D859EC000599EE /* C.mk */,
+				059C85AE10D859EC000599EE /* Objective-C.mk */,
+			);
+			path = "makefile-code";
+			sourceTree = "<group>";
+		};
+		059C85B010D859EC000599EE /* makefile-lang */ = {
+			isa = PBXGroup;
+			children = (
+				059C85B110D859EC000599EE /* en.mk */,
+				059C85B210D859EC000599EE /* fr.mk */,
+			);
+			path = "makefile-lang";
+			sourceTree = "<group>";
+		};
+		08FB7794FE84155DC02AAC07 /* MEMDebug */ = {
+			isa = PBXGroup;
+			children = (
+				059C85A210D859C0000599EE /* source */,
+				059C85A910D859C9000599EE /* makefiles */,
+			);
+			name = MEMDebug;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXLegacyTarget section */
+		D28A88AD04BDD90700651E21 /* memdebug */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) DISPLAY_HEADER=0 DISPLAY_FOOTER=0";
+			buildConfigurationList = 1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "memdebug" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			dependencies = (
+			);
+			name = memdebug;
+			passBuildSettingsInEnvironment = 1;
+			productName = MEMDebug;
+		};
+/* End PBXLegacyTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				ORGANIZATIONNAME = eosgarden;
+			};
+			buildConfigurationList = 1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "memdebug" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* MEMDebug */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D28A88AD04BDD90700651E21 /* memdebug */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB919108733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = memdebug;
+			};
+			name = Release;
+		};
+		1DEB919508733D9F0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					"$(ARCHS_STANDARD_32_BIT)",
+					"$(ARCHS_STANDARD_64_BIT)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB918F08733D9F0010E9CD /* Build configuration list for PBXLegacyTarget "memdebug" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919108733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB919308733D9F0010E9CD /* Build configuration list for PBXProject "memdebug" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB919508733D9F0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
