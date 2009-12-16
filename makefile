@@ -111,6 +111,7 @@ _DIR_BUILD        = $(DIR_BUILD)/
 _DIR_BUILD_BIN    = $(DIR_BUILD_BIN)/
 _DIR_BUILD_OBJ    = $(DIR_BUILD_OBJ)/
 _DIR_BUILD_LIB    = $(DIR_BUILD_LIB)/
+_DIR_BUILD_TMP    = $(DIR_BUILD_TMP)/
 _DIR_SRC          = $(DIR_SRC)/
 _DIR_SRC_LIB      = $(DIR_SRC_LIB)/
 _DIR_SRC_INC      = $(DIR_SRC_INC)/
@@ -218,6 +219,11 @@ clean:
 	@echo --- $(subst _DIR_BUILD_,$(_DIR_BUILD_OBJ),$(LANG_CLEAN_START))
 	$(if $(filter 1,$(DEBUG_RM)),@echo $(RM) $(ARGS_RM) $(_DIR_BUILD_OBJ)*)
 	@$(RM) $(ARGS_RM) $(_DIR_BUILD_OBJ)*
+	@echo --- $(LANG_DONE)
+	@echo
+	@echo --- $(subst _DIR_BUILD_,$(_DIR_BUILD_TMP),$(LANG_CLEAN_START))
+	$(if $(filter 1,$(DEBUG_RM)),@echo $(RM) $(ARGS_RM) $(_DIR_BUILD_TMP)*)
+	@$(RM) $(ARGS_RM) $(_DIR_BUILD_TMP)*
 	@echo --- $(LANG_DONE)
 	@echo
 

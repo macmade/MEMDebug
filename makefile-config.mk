@@ -91,6 +91,7 @@ DIR_BUILD           = ./build
 DIR_BUILD_BIN       = $(DIR_BUILD)/bin
 DIR_BUILD_OBJ       = $(DIR_BUILD)/obj
 DIR_BUILD_LIB       = $(DIR_BUILD)/lib
+DIR_BUILD_TMP       = $(DIR_BUILD)/tmp
 DIR_SRC             = ./source
 DIR_SRC_LIB         = $(DIR_SRC)/lib
 DIR_SRC_INC         = $(DIR_SRC)/include
