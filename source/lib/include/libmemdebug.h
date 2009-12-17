@@ -67,10 +67,10 @@
 #if defined( MEMDEBUG ) && MEMDEBUG
     
 /* Redefines the memory functions */
-#define malloc( size )              memdebug_malloc( size, __FILE__, __LINE__, __func__ )
-#define calloc( size1, size2 )      memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
-#define realloc( ptr, size )        memdebug_realloc( ptr, size, __FILE__, __LINE__, __func__ )
-#define free( ptr )                 memdebug_free( ptr, __FILE__, __LINE__, __func__ )
+#define malloc( size )          memdebug_malloc( size, __FILE__, __LINE__, __func__ )
+#define calloc( size1, size2 )  memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
+#define realloc( ptr, size )    memdebug_realloc( ptr, size, __FILE__, __LINE__, __func__ )
+#define free( ptr )             memdebug_free( ptr, __FILE__, __LINE__, __func__ )
 
 /* Checks if the alloca function is available */
 #ifdef _ALLOCA_H_
@@ -80,12 +80,12 @@
 
 /* Redefines the built-in alloca function  */
 #undef alloca
-#define alloca( size )              memdebug_builtin_alloca( size, __FILE__, __LINE__, __func__ )
+#define alloca( size )  memdebug_builtin_alloca( size, __FILE__, __LINE__, __func__ )
 
 #else 
 
 /* Redefine the alloca function */
-#define alloca( size )              memdebug_alloca( size, __FILE__, __LINE__, __func__ )
+#define alloca( size )  memdebug_alloca( size, __FILE__, __LINE__, __func__ )
 
 #endif
 #endif
@@ -98,6 +98,16 @@
 #define GC_malloc_atomic( size )    memdebug_gc_malloc_atomic( size, __FILE__, __LINE__, __func__ )
 #define GC_calloc( size1, size2 )   memdebug_gc_calloc( size1, size2, __FILE__, __LINE__, __func__ )
 #define GC_realloc( ptr, size )     memdebug_gc_realloc( ptr, size, __FILE__, __LINE__, __func__ )
+
+#endif
+
+#ifdef _MALLOC_MALLOC_H
+
+#define malloc_zone_malloc( zone, size )            memdebug_malloc_zone_malloc( zone, size, __FILE__, __LINE__, __func__ )
+#define malloc_zone_calloc( zone, size1, size2 )    memdebug_malloc_zone_calloc( zone, size1, size2, __FILE__, __LINE__, __func__ )
+#define malloc_zone_valloc( zone, size )            memdebug_malloc_zone_valloc( zone, size, __FILE__, __LINE__, __func__ )
+#define malloc_zone_free( zone, ptr )               memdebug_malloc_zone_free( zone, ptr, __FILE__, __LINE__, __func__ )
+#define malloc_zone_realloc( zone, ptr, size )      memdebug_malloc_zone_realloc( zone, ptr, size, __FILE__, __LINE__, __func__ )
 
 #endif
 #endif
@@ -143,6 +153,16 @@ void * memdebug_gc_malloc( size_t size, const char * file, const int line, const
 void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line, const char * func );
 void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func );
 void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func );
+
+#endif
+
+#ifdef _MALLOC_MALLOC_H
+
+void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size );
+void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2 );
+void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size );
+void   memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr );
+void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size );
 
 #endif
 

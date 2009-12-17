@@ -75,6 +75,14 @@
 #undef GC_realloc
 #endif
 
+#ifdef _MALLOC_MALLOC_H_
+#undef malloc_zone_malloc
+#undef malloc_zone_calloc
+#undef malloc_zone_valloc
+#undef malloc_zone_free
+#undef malloc_zone_realloc
+#endif
+
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
 #define MEMDEBUG_INIT_CHECK if( memdebug_inited == FALSE ) { memdebug_init(); }
 
@@ -804,6 +812,35 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
 {
     /* TEMP - Needs implementation */
     return GC_realloc( ptr, size );
+}
+
+#endif
+
+#ifdef _MALLOC_MALLOC_H_
+
+void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size )
+{
+    return malloc_zone_malloc( zone, size );
+}
+
+void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2 )
+{
+    return malloc_zone_calloc( zone, size1, size2 );
+}
+
+void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size )
+{
+    return malloc_zone_valloc( zone, size );
+}
+
+void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr )
+{
+    malloc_zone_free( zone, ptr );
+}
+
+void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size )
+{
+    return malloc_zone_realloc( zone, size );
 }
 
 #endif
