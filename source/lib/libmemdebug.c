@@ -1262,12 +1262,105 @@ static void memdebug_warning( const char * str, const char * file, const int lin
  */
 static void memdebug_print_object( struct memdebug_object * object )
 {
-    /* Common information */
+    /* Pointer address and size */
     printf(
         "# \n"
         "# - Address:                 %p\n"
-        "# - Size:                    %lu\n"
-        "# - Allocation type:         %i\n"
+        "# - Size:                    %lu\n",
+        object->ptr,
+        ( unsigned long int )object->size
+    );
+    
+    /* Checks the allocation type */
+    switch( object->alloc_type ) {
+            
+        /* malloc */
+        case MEMDEBUG_ALLOC_TYPE_MALLOC:
+            
+            printf( "# - Allocation type:         malloc\n" );
+            break;
+            
+        /* calloc */
+        case MEMDEBUG_ALLOC_TYPE_CALLOC:
+            
+            printf( "# - Allocation type:         calloc\n" );
+            break;
+            
+        /* realloc */
+        case MEMDEBUG_ALLOC_TYPE_REALLOC:
+            
+            printf( "# - Allocation type:         realloc\n" );
+            break;
+            
+        /* alloca */
+        case MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC:
+            
+            printf( "# - Allocation type:         alloca\n" );
+            break;
+            
+        /* __builtin_alloca */
+        case MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN:
+            
+            printf( "# - Allocation type:         alloca (built-in)\n" );
+            break;
+            
+        /* gc_malloc */
+        case MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC:
+            
+            printf( "# - Allocation type:         malloc (GC)\n" );
+            break;
+            
+        /* gc_malloc_atomic */
+        case MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC:
+            
+            printf( "# - Allocation type:         atomic malloc (GC)\n" );
+            break;
+            
+        /* gc_calloc */
+        case MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC:
+            
+            printf( "# - Allocation type:         calloc (GC)\n" );
+            break;
+            
+        /* gc_realloc */
+        case MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC:
+            
+            printf( "# - Allocation type:         realloc (GC)\n" );
+            break;
+            
+        /* malloc_zone_malloc */
+        case MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC:
+            
+            printf( "# - Allocation type:         zone malloc\n" );
+            break;
+            
+        /* malloc_zone_calloc */
+        case MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC:
+            
+            printf( "# - Allocation type:         zone calloc\n" );
+            break;
+            
+        /* malloc_zone_valloc */
+        case MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC:
+            
+            printf( "# - Allocation type:         zone valloc\n" );
+            break;
+            
+        /* malloc_zone_realloc */
+        case MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC:
+            
+            printf( "# - Allocation type:         zone realloc\n" );
+            break;
+        
+        /* Unknown type */
+        default:
+            
+            printf( "# - Allocation type:         <unknown>\n" );
+            break;
+    }
+    
+    /* Allocation nformations */
+    printf(
         "# \n"
         "# - Allocated in function:   %s()"
         #ifdef __GNUC__
@@ -1277,9 +1370,6 @@ static void memdebug_print_object( struct memdebug_object * object )
         "# - Allocated in file:       %s\n"
         "# - Allocated at line:       %i\n"
         "# \n",
-        object->ptr,
-        ( unsigned long int )object->size,
-        object->alloc_type,
         object->alloc_func,
         #ifdef __GNUC__
         object->alloc_func_addr,
