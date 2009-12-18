@@ -301,12 +301,12 @@ static void memdebug_init( void )
 /**
  * Creates a new memory record object in the pool
  * 
- * @param   void *          The pointer to the allocated memory area
- * @param   size_t          The size of the allocated memory area
- * @param   const char *    The file in which the allocation was made
- * @param   const int       The line of the file in which the allocation was made
- * @param   const char *    The name of the function in which the allocation was made
- * @param   const char *    The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
+ * @param   void *                      The pointer to the allocated memory area
+ * @param   size_t                      The size of the allocated memory area
+ * @param   const char *                The file in which the allocation was made
+ * @param   const int                   The line of the file in which the allocation was made
+ * @param   const char *                The name of the function in which the allocation was made
+ * @param   const char *                The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
  * @return  struct memdebug_object *    The new memory record object
  */
 static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type )
