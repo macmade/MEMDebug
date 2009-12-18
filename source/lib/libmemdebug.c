@@ -90,18 +90,29 @@
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
 /* The supported allocation types */
-#define MEMDEBUG_ALLOC_TYPE_MALLOC                  "malloc"
-#define MEMDEBUG_ALLOC_TYPE_CALLOC                  "calloc"
-#define MEMDEBUG_ALLOC_TYPE_REALLOC                 "realloc"
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          "alloca (built-in)"
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  "alloca"
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          "malloc (Objective-C / GC)"
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   "atomic malloc (Objective-C / GC)"
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          "calloc (Objective-C / GC)"
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         "realloc (Objective-C / GC)"
+#define MEMDEBUG_ALLOC_TYPE_MALLOC                  0x0001
+#define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0002
+#define MEMDEBUG_ALLOC_TYPE_REALLOC                 0x0004
+#define MEMDEBUG_ALLOC_TYPE_STD                     0x0007
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC             0x0008
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          0x0010
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  0x0018
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          0x0020
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0040
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0080
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0100
+#define MEMDEBUG_ALLOC_TYPE_GC                      0x01E0
+#define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x0200
+#define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x0400
+#define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x0800
+#define MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC            0x1000
+#define MEMDEBUG_ALLOC_TYPE_ZONE                    0x1E00
 
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
+
+/* Definition of the type for the allocation type */
+typedef unsigned int memdebug_alloc_type;
 
 /* Definition of a boolean type, as usual */
 typedef enum{ FALSE, TRUE } memdebug_bool;
@@ -128,7 +139,7 @@ struct memdebug_object
     const char * alloc_func;
     
     /* The allocation type (MEMDEBUG_ALLOC_TYPE_XXX) */
-    const char * alloc_type;
+    memdebug_alloc_type alloc_type;
     
     /* The name of the file in which the object was freed */
     const char * free_file;
@@ -179,7 +190,7 @@ struct memdebug_pool
 /* Prototypes for the internal (private) functions */
 static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
-static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, const char * alloc_type );
+static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void askForDebugCommand( void );
@@ -295,7 +306,7 @@ static void memdebug_init( void )
  * @param   const char *    The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
  * @return  struct memdebug_object *    The new memory record object
  */
-static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, const char * alloc_type )
+static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type )
 {
     struct memdebug_object * object;
     
@@ -332,17 +343,12 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     object->alloc_type = alloc_type;
     
     /* Checks if the object was allocated with alloca */
-    if(    strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA )         == 0
-        || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN ) == 0
-    ) {
+    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA ) {
         
         /* Objects allocated with alloca are automatically freed */
         object->free = TRUE;
         
-    } else if( strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC )        == 0
-            || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC ) == 0
-            || strcmp( alloc_type, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC )        == 0
-    ) {
+    } else if( alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
         
         /* Garbage collector is in use, so the object will be automatically freed */
         object->free = TRUE;
@@ -1273,7 +1279,7 @@ static void memdebug_print_object( struct memdebug_object * object )
         "# \n"
         "# - Address:                 %p\n"
         "# - Size:                    %lu\n"
-        "# - Allocation type:         %s\n"
+        "# - Allocation type:         %i\n"
         "# \n"
         "# - Allocated in function:   %s()"
         #ifdef __GNUC__
@@ -1297,10 +1303,8 @@ static void memdebug_print_object( struct memdebug_object * object )
     /* Checks if the object was freed */
     if( object->free == TRUE ) {
         
-        /* Checks if the object was allocated with alloca */
-        if(    strcmp( object->alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA )         == 0
-            || strcmp( object->alloc_type, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN ) == 0
-        ) {
+        /* Checks if the object is automatically freed */
+        if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
             
             /* Free informations not available */
             printf(
