@@ -180,6 +180,9 @@ struct memdebug_pool
     /* The number of freed memory records in the pool */
     unsigned long int num_free;
     
+    /* The number of automatically freed memory records in the pool */
+    unsigned long int num_auto;
+    
     /* The total memory usage */
     size_t memory_total;
     
@@ -331,7 +334,6 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     
     /* Increments the counter as we have a new object */
     memdebug_trace->num_objects++;
-    memdebug_trace->num_active++;
     
     object = &memdebug_trace->objects[ memdebug_trace->num_objects - 1 ];
     
@@ -342,21 +344,18 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     object->alloc_func = func;
     object->alloc_type = alloc_type;
     
-    /* Checks if the object was allocated with alloca */
-    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA ) {
+    /* Checks if the object is autamatically freed (alloca or GC functions) */
+    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
         
-        /* Objects allocated with alloca are automatically freed */
+        /* The object will be automatically freed */
         object->free = TRUE;
-        
-    } else if( alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
-        
-        /* Garbage collector is in use, so the object will be automatically freed */
-        object->free = TRUE;
+        memdebug_trace->num_auto++;
         
     } else {
         
-        /* Object needs to be manually freed */
+        /* The object will need to be manually freed */
         object->free = FALSE;
+        memdebug_trace->num_active++;
     }
     
     /* Checks if we are using GCC */
@@ -367,9 +366,13 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     
     #endif
     
-    /* Updates the memory usage */
-    memdebug_trace->memory_total  += size;
-    memdebug_trace->memory_active += size;
+    /* Checks if the allocation was made using dynamic memory */
+    if( !( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA ) ) {
+        
+        /* Updates the memory usage */
+        memdebug_trace->memory_total  += size;
+        memdebug_trace->memory_active += size;
+    }
     
     /* Returns the address of the new object */
     return object;    
@@ -638,9 +641,6 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN );
-        
-        /* Objects allocated with alloca are automaticaly freed */
-        memdebug_trace->num_active--;
     }
     
     /* Returns the address of the allocated area */
@@ -677,9 +677,6 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA );
-        
-        /* Objects allocated with alloca are automaticaly freed */
-        memdebug_trace->num_active--;
     }
     
     /* Returns the address of the allocated area */
@@ -720,9 +717,6 @@ void * memdebug_gc_malloc( size_t size, const char * file, const int line, const
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC );
-        
-        /* Garbage collector is in use, so the object will be automatically freed */
-        memdebug_trace->num_active--;
     }
     
     /* Returns the address of the allocated area */
@@ -757,9 +751,6 @@ void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC );
-        
-        /* Garbage collector is in use, so the object will be automatically freed */
-        memdebug_trace->num_active--;
     }
     
     /* Returns the address of the allocated area */
@@ -795,9 +786,6 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC );
-        
-        /* Garbage collector is in use, so the object will be automatically freed */
-        memdebug_trace->num_active--;
     }
     
     /* Returns the address of the allocated area */
@@ -1371,17 +1359,19 @@ void memdebug_print_status( void )
         "# MEMDebug - Status\n"
         MEMDEBUG_HR
         "# \n"
-        "# - Total allocated objects:       %lu\n"
-        "# - Number of freed objects:       %lu\n"
-        "# - Number of non-freed objects:   %lu\n",
+        "# - Total allocated objects:               %lu\n"
+        "# - Number of freed objects:               %lu\n"
+        "# - Number of non-freed objects:           %lu\n"
+        "# - Number of automatically-freed objects: %lu\n",
         memdebug_trace->num_objects,
         memdebug_trace->num_free,
-        memdebug_trace->num_active
+        memdebug_trace->num_active,
+        memdebug_trace->num_auto
     );
     printf(
         "# \n"
-        "# - Total memory:                  %lu\n"
-        "# - Active memory:                 %lu\n"
+        "# - Total memory:                          %lu\n"
+        "# - Active memory:                         %lu\n"
         "# \n"
         MEMDEBUG_HR,
         memdebug_trace->memory_total,
