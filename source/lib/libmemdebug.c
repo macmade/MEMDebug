@@ -193,7 +193,7 @@ static void memdebug_init( void );
 static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
-static void askForDebugCommand( void );
+static void memdebug_ask_debug_cmd( void );
 static void memdebug_sig_handler( int id );
 static void memdebug_warning( const char * str, const char * file, const int line, const char * func, ... );
 static void memdebug_print_object( struct memdebug_object * object );
@@ -1054,7 +1054,7 @@ void memdebug_backtrace( unsigned int skip_levels )
  * 
  * @return void
  */
-static void askForDebugCommand( void )
+static void memdebug_ask_debug_cmd( void )
 {
     char c;
     static unsigned int skip_levels = 3;
@@ -1156,7 +1156,7 @@ static void askForDebugCommand( void )
     skip_levels++;
     
     /* Asks for a command again */
-    askForDebugCommand();
+    memdebug_ask_debug_cmd();
 }
 
 /**
@@ -1195,7 +1195,7 @@ static void memdebug_sig_handler( int id )
         }
         
         /* Asks for a debug command */
-        askForDebugCommand();
+        memdebug_ask_debug_cmd();
         
         /* Checks the signal ID */
         if( id == SIGSEGV ) {
@@ -1263,7 +1263,7 @@ static void memdebug_warning( const char * str, const char * file, const int lin
     va_end( ap );
     
     /* Asks for a debug command */
-    askForDebugCommand();
+    memdebug_ask_debug_cmd();
 }
 
 /**
