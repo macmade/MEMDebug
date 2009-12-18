@@ -374,7 +374,7 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
         memdebug_trace->memory_active += size;
     }
     
-    /* Returns the address of the new object */
+    /* Returns the new object */
     return object;    
 }
 
