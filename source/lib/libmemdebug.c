@@ -101,7 +101,7 @@
 #define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0040
 #define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0080
 #define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0100
-#define MEMDEBUG_ALLOC_TYPE_GC                      0x01E0
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC                 0x01E0
 #define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x0200
 #define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x0400
 #define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x0800
@@ -346,7 +346,7 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     object->alloc_type = alloc_type;
     
     /* Checks if the object is autamatically freed (alloca or GC functions) */
-    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
+    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
         
         /* The object will be automatically freed */
         object->free = TRUE;
@@ -826,8 +826,48 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
  */
 void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
 {
-    /* TEMP - Needs implementation */
-    return GC_realloc( ptr, size );
+    struct memdebug_object * object;
+    
+    /* Checks if the address we are trying to reallocate exists in the pool */
+    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
+        
+        memdebug_warning(
+            "Trying to reallocate a non-existing object",
+            file,
+            line,
+            func
+        );
+    }
+    
+    /* Checks if the memory area was already freed */
+    if( object->free == TRUE ) {
+        
+        memdebug_warning(
+            "Trying to reallocate a freed object",
+              file,
+              line,
+              func
+        );
+    }
+    
+    /* Rellocates memory */
+    if( NULL == ( ptr = ( void * )GC_realloc( ptr, size ) ) ) {
+        
+        memdebug_warning(
+            "The call to GC_realloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        return ptr;
+    }
+    
+    /* Updates the memory record object */
+    memdebug_update_object( object, ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC );
+    
+    /* Returns the address of the reallocated area */
+    return ptr;
 }
 
 #endif
@@ -1404,7 +1444,7 @@ static void memdebug_print_object( struct memdebug_object * object )
     if( object->free == TRUE ) {
         
         /* Checks if the object is automatically freed */
-        if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_GC ) {
+        if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
             
             /* Free informations not available */
             printf(
