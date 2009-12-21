@@ -193,7 +193,8 @@ struct memdebug_pool
 /* Prototypes for the internal (private) functions */
 static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
-static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type );
+static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
+static void memdebug_update_object( struct memdebug_object * obj, void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void memdebug_ask_debug_cmd( void );
@@ -379,6 +380,45 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
 }
 
 /**
+ * Updates an existing memory record object in the pool
+ * 
+ * @param   struct memdebug_object *    The mempty record object to update
+ * @param   void *                      The pointer to the allocated memory area
+ * @param   size_t                      The size of the allocated memory area
+ * @param   const char *                The file in which the allocation was made
+ * @param   const int                   The line of the file in which the allocation was made
+ * @param   const char *                The name of the function in which the allocation was made
+ * @param   const char *                The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
+ * @return  void
+ */
+static void memdebug_update_object( struct memdebug_object * object, void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type )
+{
+    /* Updates the memory record informations */
+    object->ptr        = ptr;
+    object->alloc_file = file;
+    object->alloc_line = line;
+    object->alloc_func = func;
+    object->alloc_type = alloc_type;
+    
+    /* Updates the pool memory size and usage */
+    memdebug_trace->memory_total  -= object->size;
+    memdebug_trace->memory_active -= object->size;
+    memdebug_trace->memory_total  += size;
+    memdebug_trace->memory_active += size;
+    
+    /* Updates the size of the memory record */
+    object->size = size;
+    
+    /* Checks if we are using GCC */
+    #ifdef __GNUC__
+        
+        /* Stores the address of the caller function */
+        object->alloc_func_addr = __builtin_return_address( 2 );
+        
+    #endif
+}
+
+/**
  * Gets a memory record object from the pool
  * 
  * @param   void *                      The address of the memory area corresponding to the memory record object
@@ -524,26 +564,8 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
         return ptr;
     }
     
-    /* Udpates the memory record object */
-    object->ptr        = ptr;
-    object->size       = size;
-    object->alloc_file = file;
-    object->alloc_line = line;
-    object->alloc_func = func;
-    object->alloc_type = MEMDEBUG_ALLOC_TYPE_REALLOC;
-    object->free       = FALSE;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-    
-    /* Stores the address of the caller function */
-    object->alloc_func_addr = __builtin_return_address( 1 );
-    
-    #endif
-    
-    /* Updates the memory usage */
-    memdebug_trace->memory_total  += size;
-    memdebug_trace->memory_active += size;
+    /* Updates the memory record object */
+    memdebug_update_object( object, ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_REALLOC );
     
     /* Returns the address of the reallocated area */
     return ptr;
