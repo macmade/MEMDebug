@@ -194,7 +194,7 @@ struct memdebug_pool
 static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
 static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
-static void memdebug_update_object( struct memdebug_object * obj, void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
+static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void memdebug_ask_debug_cmd( void );
@@ -382,19 +382,43 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
 /**
  * Updates an existing memory record object in the pool
  * 
- * @param   struct memdebug_object *    The mempty record object to update
- * @param   void *                      The pointer to the allocated memory area
- * @param   size_t                      The size of the allocated memory area
- * @param   const char *                The file in which the allocation was made
- * @param   const int                   The line of the file in which the allocation was made
- * @param   const char *                The name of the function in which the allocation was made
- * @param   const char *                The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
+ * @param   void *          The address of the memory area corresponding to the memory record object
+ * @param   void *          The new address of the memory area for the memory record object
+ * @param   size_t          The size of the allocated memory area
+ * @param   const char *    The file in which the allocation was made
+ * @param   const int       The line of the file in which the allocation was made
+ * @param   const char *    The name of the function in which the allocation was made
+ * @param   const char *    The allocation type (MEMDEBUG_ALLOC_TYPE_XXX)
  * @return  void
  */
-static void memdebug_update_object( struct memdebug_object * object, void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type )
+static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type )
 {
+    struct memdebug_object * object;
+    
+    /* Checks if the address we are trying to reallocate exists in the pool */
+    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
+        
+        memdebug_warning(
+            "Trying to reallocate a non-existing object",
+            file,
+            line,
+            func
+        );
+    }
+    
+    /* Checks if the memory area was already freed */
+    if( object->free == TRUE ) {
+        
+        memdebug_warning(
+            "Trying to reallocate a freed object",
+            file,
+            line,
+            func
+        );
+    }
+    
     /* Updates the memory record informations */
-    object->ptr        = ptr;
+    object->ptr        = ptr_new;
     object->alloc_file = file;
     object->alloc_line = line;
     object->alloc_func = func;
@@ -527,32 +551,10 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
  */
 void * memdebug_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
 {
-    struct memdebug_object * object;
-    
-    /* Checks if the address we are trying to reallocate exists in the pool */
-    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
-        
-        memdebug_warning(
-            "Trying to reallocate a non-existing object",
-            file,
-            line,
-            func
-        );
-    }
-    
-    /* Checks if the memory area was already freed */
-    if( object->free == TRUE ) {
-        
-        memdebug_warning(
-            "Trying to reallocate a freed object",
-            file,
-            line,
-            func
-        );
-    }
+    void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr = ( void * )realloc( ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )realloc( ptr, size ) ) ) {
         
         memdebug_warning(
             "The call to realloc() failed. Reason: %s",
@@ -561,14 +563,14 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
             func,
             strerror( errno )
         );
-        return ptr;
+        return ptr_new;
     }
     
     /* Updates the memory record object */
-    memdebug_update_object( object, ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_REALLOC );
+    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_REALLOC );
     
     /* Returns the address of the reallocated area */
-    return ptr;
+    return ptr_new;
 }
 
 /**
@@ -826,32 +828,10 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
  */
 void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const int line, const char * func )
 {
-    struct memdebug_object * object;
-    
-    /* Checks if the address we are trying to reallocate exists in the pool */
-    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
-        
-        memdebug_warning(
-            "Trying to reallocate a non-existing object",
-            file,
-            line,
-            func
-        );
-    }
-    
-    /* Checks if the memory area was already freed */
-    if( object->free == TRUE ) {
-        
-        memdebug_warning(
-            "Trying to reallocate a freed object",
-              file,
-              line,
-              func
-        );
-    }
+    void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr = ( void * )GC_realloc( ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )GC_realloc( ptr, size ) ) ) {
         
         memdebug_warning(
             "The call to GC_realloc() failed. Reason: %s",
@@ -860,14 +840,14 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
             func,
             strerror( errno )
         );
-        return ptr;
+        return ptr_new;
     }
     
     /* Updates the memory record object */
-    memdebug_update_object( object, ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC );
+    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC );
     
     /* Returns the address of the reallocated area */
-    return ptr;
+    return ptr_new;
 }
 
 #endif
