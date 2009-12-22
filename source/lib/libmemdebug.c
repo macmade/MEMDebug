@@ -947,6 +947,10 @@ void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size )
 
 void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr )
 {
+    /* Marks the object as freed */
+    memdebug_free_object( ptr, file, line, func );
+    
+    /* Frees the memory area */
     malloc_zone_free( zone, ptr );
 }
 
