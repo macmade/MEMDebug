@@ -101,7 +101,7 @@
 
 #endif
 
-#ifdef _MALLOC_MALLOC_H
+#ifdef _MALLOC_MALLOC_H_
 
 #define malloc_zone_malloc( zone, size )            memdebug_malloc_zone_malloc( zone, size, __FILE__, __LINE__, __func__ )
 #define malloc_zone_calloc( zone, size1, size2 )    memdebug_malloc_zone_calloc( zone, size1, size2, __FILE__, __LINE__, __func__ )
@@ -156,7 +156,7 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
 
 #endif
 
-#ifdef _MALLOC_MALLOC_H
+#ifdef _MALLOC_MALLOC_H_
 
 void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const char * file, const int line, const char * func );
 void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2, const char * file, const int line, const char * func );
