@@ -902,7 +902,27 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
 
 void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size )
 {
-    return malloc_zone_valloc( zone, size );
+    void * ptr;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )malloc_zone_valloc( zone, size ) ) ) {
+        
+        memdebug_warning(
+            "The call to malloc_zone_valloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        
+    } else {
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC );
+    }
+    
+    /* Returns the address of the allocated area */
+    return ptr;
 }
 
 void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr )
