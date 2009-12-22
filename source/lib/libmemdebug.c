@@ -870,7 +870,7 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
 
 #ifdef _MALLOC_MALLOC_H_
 
-void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size )
+void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const char * file, const int line, const char * func )
 {
     void * ptr;
     
@@ -895,7 +895,7 @@ void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size )
     return ptr;
 }
 
-void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2 )
+void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2, const char * file, const int line, const char * func )
 {
     void * ptr;
     
@@ -920,7 +920,7 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
     return ptr;
 }
 
-void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size )
+void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size, const char * file, const int line, const char * func )
 {
     void * ptr;
     
@@ -945,7 +945,7 @@ void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size )
     return ptr;
 }
 
-void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr )
+void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr, const char * file, const int line, const char * func )
 {
     /* Marks the object as freed */
     memdebug_free_object( ptr, file, line, func );
@@ -954,7 +954,7 @@ void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr )
     malloc_zone_free( zone, ptr );
 }
 
-void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size )
+void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size, const char * file, const int line, const char * func )
 {
     return malloc_zone_realloc( zone, size );
 }

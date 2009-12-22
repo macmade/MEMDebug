@@ -158,11 +158,11 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
 
 #ifdef _MALLOC_MALLOC_H
 
-void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size );
-void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2 );
-void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size );
-void   memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr );
-void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size );
+void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const char * file, const int line, const char * func );
+void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t size2, const char * file, const int line, const char * func );
+void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size, const char * file, const int line, const char * func );
+void   memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr, const char * file, const int line, const char * func );
+void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size, const char * file, const int line, const char * func );
 
 #endif
 
