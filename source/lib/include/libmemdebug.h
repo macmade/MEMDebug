@@ -29,8 +29,8 @@
 
 /* $Id$ */
 
-#ifndef MEMDEBUG_H
-#define MEMDEBUG_H
+#ifndef _MEMDEBUG_H_
+#define _MEMDEBUG_H_
 #pragma once
 
 /* Checks if the function name constant is defined */
@@ -177,4 +177,4 @@ unsigned long int memdebug_num_objects( void );
 unsigned long int memdebug_num_free( void );
 unsigned long int memdebug_num_active( void );
 
-#endif /* MEMDEBUG_H */
+#endif /* _MEMDEBUG_H_ */
