@@ -956,7 +956,26 @@ void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr, const char * f
 
 void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size, const char * file, const int line, const char * func )
 {
-    return malloc_zone_realloc( zone, size );
+    void * ptr_new;
+    
+    /* Rellocates memory */
+    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( ptr, size ) ) ) {
+        
+        memdebug_warning(
+            "The call to malloc_zone_realloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        return ptr_new;
+    }
+    
+    /* Updates the memory record object */
+    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC );
+    
+    /* Returns the address of the reallocated area */
+    return ptr_new;
 }
 
 #endif
