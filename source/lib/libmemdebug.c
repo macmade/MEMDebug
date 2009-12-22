@@ -195,6 +195,7 @@ static void memdebug_fatal( const char * format, ... );
 static void memdebug_init( void );
 static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
 static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
+static void memdebug_free_object( void * ptr, const char * file, const int line, const char * func );
 static struct memdebug_object * memdebug_get_object( void * ptr );
 static void memdebug_dump( struct memdebug_object * object );
 static void memdebug_ask_debug_cmd( void );
@@ -443,6 +444,61 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
 }
 
 /**
+ * Marks an existing memory record object as free
+ * 
+ * @param   void *          The address of the memory area corresponding to the memory record object
+ * @param   const char *    The file in which the deallocation was made
+ * @param   const int       The line of the file in which the deallocation was made
+ * @param   const char *    The name of the function in which the deallocation was made
+ * @return  void
+ */
+static void memdebug_free_object( void * ptr, const char * file, const int line, const char * func )
+{
+    struct memdebug_object * object;
+    
+    /* Checks if the address we are trying to free exists in the pool */
+    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
+        
+        memdebug_warning(
+            "Trying to free a non-existing object",
+            file,
+            line,
+            func
+        );
+    }
+    
+    /* Checks if the memory area was already freed */
+    if( object->free == TRUE ) {
+        
+        memdebug_warning(
+            "Trying to free a freed object",
+            file,
+            line,
+            func
+        );
+    }
+    
+    /* Udpates the memory record object */
+    object->free      = TRUE;
+    object->free_file = file;
+    object->free_line = line;
+    object->free_func = func;
+    
+    /* Checks if we are using GCC */
+    #ifdef __GNUC__
+        
+        /* Stores the address of the caller function */
+        object->free_func_addr = __builtin_return_address( 1 );
+    
+    #endif
+    
+    /* Updates the memory usage */
+    memdebug_trace->num_active--;
+    memdebug_trace->num_free++;
+    memdebug_trace->memory_active -= object->size;
+}
+
+/**
  * Gets a memory record object from the pool
  * 
  * @param   void *                      The address of the memory area corresponding to the memory record object
@@ -584,48 +640,8 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
  */
 void memdebug_free( void * ptr, const char * file, const int line, const char * func )
 {
-    struct memdebug_object * object;
-    
-    /* Checks if the address we are trying to free exists in the pool */
-    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
-        
-        memdebug_warning(
-            "Trying to free a non-existing object",
-            file,
-            line,
-            func
-        );
-    }
-    
-    /* Checks if the memory area was already freed */
-    if( object->free == TRUE ) {
-        
-        memdebug_warning(
-            "Trying to free a freed object",
-            file,
-            line,
-            func
-        );
-    }
-    
-    /* Udpates the memory record object */
-    object->free      = TRUE;
-    object->free_file = file;
-    object->free_line = line;
-    object->free_func = func;
-    
-    /* Checks if we are using GCC */
-    #ifdef __GNUC__
-    
-    /* Stores the address of the caller function */
-    object->free_func_addr = __builtin_return_address( 1 );
-    
-    #endif
-    
-    /* Updates the memory usage */
-    memdebug_trace->num_active--;
-    memdebug_trace->num_free++;
-    memdebug_trace->memory_active -= object->size;
+    /* Marks the object as freed */
+    memdebug_free_object( ptr, file, line, func );
     
     /* Frees the memory area */
     free( ptr );
@@ -1492,12 +1508,12 @@ void memdebug_print_status( void )
         MEMDEBUG_HR
         "# \n"
         "# - Total allocated objects:               %lu\n"
-        "# - Number of freed objects:               %lu\n"
         "# - Number of non-freed objects:           %lu\n"
+        "# - Number of freed objects:               %lu\n"
         "# - Number of automatically-freed objects: %lu\n",
         memdebug_trace->num_objects,
-        memdebug_trace->num_free,
         memdebug_trace->num_active,
+        memdebug_trace->num_free,
         memdebug_trace->num_auto
     );
     printf(
