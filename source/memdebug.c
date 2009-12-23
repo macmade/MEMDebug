@@ -33,6 +33,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Checks if we are compiling under Mac OS X */
+#ifdef __APPLE__
+
+#include <malloc/malloc.h>
+
+#endif
+
 /* Activates MEMDebug */
 #define MEMDEBUG 1
 
@@ -47,35 +54,49 @@
 int main( void )
 {
     int i;
-    unsigned char * x;
-    unsigned char * y;
-    unsigned char * z;
+    unsigned char * m1;
+    unsigned char * m2;
+    unsigned char * m3;
+    unsigned char * m4;
+    
+    m1 = NULL;
+    m2 = NULL;
+    m3 = NULL;
+    m4 = NULL;
     
     /* Checks if the alloca function is available */
     #ifdef _ALLOCA_H_
     
     /* Allocates some memory in the stack */
-    z = alloca( 10 * sizeof( unsigned char ) );
+    m1 = alloca( 10 * sizeof( unsigned char ) );
     
     #endif
     
+    /* Checks if we are compiling under Mac OS X */
+    #ifdef __APPLE__
+    
+    m2 = malloc_zone_malloc( malloc_default_zone(), 10 * sizeof( unsigned char ) );
+    
+    malloc_zone_free( malloc_default_zone(), m2 );
+    
+    #endif
     
     /* Allocates some memory */
-    x = ( unsigned char * )malloc( 2048 * sizeof( unsigned char ) );
-    y = ( unsigned char * )malloc( 256 * sizeof( unsigned char ) );
+    m3 = ( unsigned char * )malloc( 2048 * sizeof( unsigned char ) );
+    m4 = ( unsigned char * )malloc( 256 * sizeof( unsigned char ) );
     
     /* Free some memory */
-    free( x );
+    free( m3 );
     
     /* Fills an allocated memory area */
     for( i = 0; i < 256; i++ ) {
         
-        y[ i ] = i;
+        m4[ i ] = i;
     }
     
     /* This will create a segmentation fault (SIGSEGV) */
-    x = 0;
-    printf( "%i", x[ 0 ] );
+    m3 = 0;
+    printf( "%i", m3[ 0 ] );
     
     return EXIT_SUCCESS;
 }
