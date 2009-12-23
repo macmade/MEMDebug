@@ -38,16 +38,19 @@
 #include <signal.h>
 #include <stdarg.h>
 
-/* Checks if we can have a backtrace, using execinfo.h */
+/* Checks if we are compiling under Mac OS X */
 #if defined( __APPLE__ )
     
-/* Yes - Mac OS X */
+/* The backtrace functions are available */
 #include <execinfo.h>
 #define MEMDEBUG_HAVE_EXECINFO_H
-    
+
+/*  */
+#include <malloc/malloc.h>
+
 #elif defined( __GLIBC__ ) && defined( HAVE_EXECINFO_H )
     
-/* Yes - GNU LibC */
+/* The backtrace functions are available */
 #include <execinfo.h>
 #define MEMDEBUG_HAVE_EXECINFO_H
     
@@ -84,7 +87,7 @@
 #endif
 
 /* Macro to check if MEMDebug was inited (if not, it will init it) */
-#define MEMDEBUG_INIT_CHECK if( memdebug_inited == FALSE ) { memdebug_init(); }
+#define MEMDEBUG_INIT_CHECK if( memdebug_inited == MEMDEBUG_FALSE ) { memdebug_init(); }
 
 /* Horizontal ruler */
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
@@ -115,7 +118,7 @@
 typedef unsigned int memdebug_alloc_type;
 
 /* Definition of a boolean type, as usual */
-typedef enum{ FALSE, TRUE } memdebug_bool;
+typedef enum { MEMDEBUG_FALSE = 0, MEMDEBUG_TRUE = 1 } memdebug_bool;
 
 /* Structure for a memory record */
 struct memdebug_object
@@ -246,7 +249,7 @@ static void memdebug_init( void )
     struct sigaction sa2;
     
     /* Nothing to do if MEMDebug is already initialized */
-    if( memdebug_inited == TRUE ) {
+    if( memdebug_inited == MEMDEBUG_TRUE ) {
         
         return;
     }
@@ -297,7 +300,7 @@ static void memdebug_init( void )
     memdebug_trace->memory_total  = 0;
     memdebug_trace->memory_active = 0;
     memdebug_trace->pool_size     = MEMDEBUG_POOL_SIZE;
-    memdebug_inited               = TRUE;
+    memdebug_inited               = MEMDEBUG_TRUE;
 }
 
 /**
@@ -350,13 +353,13 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
         
         /* The object will be automatically freed */
-        object->free = TRUE;
+        object->free = MEMDEBUG_TRUE;
         memdebug_trace->num_auto++;
         
     } else {
         
         /* The object will need to be manually freed */
-        object->free = FALSE;
+        object->free = MEMDEBUG_FALSE;
         memdebug_trace->num_active++;
     }
     
@@ -408,7 +411,7 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     }
     
     /* Checks if the memory area was already freed */
-    if( object->free == TRUE ) {
+    if( object->free == MEMDEBUG_TRUE ) {
         
         memdebug_warning(
             "Trying to reallocate a freed object",
@@ -468,7 +471,7 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     }
     
     /* Checks if the memory area was already freed */
-    if( object->free == TRUE ) {
+    if( object->free == MEMDEBUG_TRUE ) {
         
         memdebug_warning(
             "Trying to free a freed object",
@@ -479,7 +482,7 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     }
     
     /* Udpates the memory record object */
-    object->free      = TRUE;
+    object->free      = MEMDEBUG_TRUE;
     object->free_file = file;
     object->free_line = line;
     object->free_func = func;
@@ -913,7 +916,7 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
     } else {
         
         /* Creates a new memory record object for the allocated area */
-        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC );
+        memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC );
     }
     
     /* Returns the address of the allocated area */
@@ -959,7 +962,7 @@ void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t si
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( zone, ptr, size ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_realloc() failed. Reason: %s",
@@ -1520,7 +1523,7 @@ static void memdebug_print_object( struct memdebug_object * object )
     );
     
     /* Checks if the object was freed */
-    if( object->free == TRUE ) {
+    if( object->free == MEMDEBUG_TRUE ) {
         
         /* Checks if the object is automatically freed */
         if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
@@ -1688,7 +1691,7 @@ void memdebug_print_free( void )
         for( i = 0; i < memdebug_trace->num_objects; i++ ) {
             
             /* Checks if the current object was freed */
-            if( memdebug_trace->objects[ i ].free == TRUE ) {
+            if( memdebug_trace->objects[ i ].free == MEMDEBUG_TRUE ) {
                 
                 /* Prints information about the current object */
                 printf(
@@ -1736,7 +1739,7 @@ void memdebug_print_active( void )
         for( i = 0; i < memdebug_trace->num_objects; i++ ) {
             
             /* Checks if the current object is active */
-            if( memdebug_trace->objects[ i ].free == FALSE ) {
+            if( memdebug_trace->objects[ i ].free == MEMDEBUG_FALSE ) {
                 
                 /* Prints information about the current object */
                 printf(
