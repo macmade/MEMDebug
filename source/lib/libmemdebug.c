@@ -114,8 +114,20 @@
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
 
+/*  */
+#define MEMDEBUG_FENCE_VAL 0x3CC3L
+
+/*  */
+#define MEMDEBUG_FENCE_SIZE sizeof( fence )
+
+/*  */
+#define MEMDEBUG_ALLOC_SIZE( size ) ( size ) + ( 2 * FENCE_SIZE )
+
 /* Definition of the type for the allocation type */
 typedef unsigned long int memdebug_alloc_type;
+
+/*  */
+typedef unsigned long int memdebug_fence;
 
 /* Definition of a boolean type, as usual */
 typedef enum { MEMDEBUG_FALSE = 0, MEMDEBUG_TRUE = 1 } memdebug_bool;
