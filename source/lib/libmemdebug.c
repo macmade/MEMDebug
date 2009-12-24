@@ -118,7 +118,7 @@
 #define MEMDEBUG_FENCE_VAL 0x3CC3L
 
 /*  */
-#define MEMDEBUG_FENCE_SIZE sizeof( fence )
+#define MEMDEBUG_FENCE_SIZE sizeof( memdebug_fence )
 
 /*  */
 #define MEMDEBUG_ALLOC_SIZE( size ) ( size ) + ( 2 * FENCE_SIZE )
@@ -212,6 +212,8 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
 static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, const char * file, const int line, const char * func, memdebug_alloc_type alloc_type );
 static void memdebug_free_object( void * ptr, const char * file, const int line, const char * func );
 static struct memdebug_object * memdebug_get_object( void * ptr );
+static void memdebug_write_fence( struct memdebug_object * object );
+static memdebug_bool memdebug_check_fence( struct memdebug_object * object );
 static void memdebug_dump( struct memdebug_object * object );
 static void memdebug_ask_debug_cmd( void );
 static void memdebug_sig_handler( int id );
@@ -539,6 +541,44 @@ static struct memdebug_object * memdebug_get_object( void * ptr )
     
     /* No memory record object corresponding to the given pointer */
     return NULL;
+}
+
+/**
+ * 
+ */
+static void memdebug_write_fence( struct memdebug_object * object )
+{
+    char * ptr;
+    
+    ptr                      = ( char * )object->ptr;
+    *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
+    ptr                     += object->size + MEMDEBUG_FENCE_SIZE;
+    *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
+}
+
+/**
+ * 
+ */
+static memdebug_bool memdebug_check_fence( struct memdebug_object * object )
+{
+    char * ptr;
+    
+    ptr  = ( char * )object->ptr;
+    ptr -= MEMDEBUG_FENCE_SIZE;
+    
+    if( *( memdebug_fence * )ptr != MEMDEBUG_FENCE_VAL ) {
+        
+        return MEMDEBUG_FALSE;
+    }
+    
+    ptr += object->size + MEMDEBUG_FENCE_SIZE;
+    
+    if( *( memdebug_fence * )ptr != MEMDEBUG_FENCE_VAL ) {
+        
+        return MEMDEBUG_FALSE;
+    }
+    
+    return MEMDEBUG_TRUE;
 }
 
 /**
