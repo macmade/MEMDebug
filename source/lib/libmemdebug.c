@@ -93,29 +93,29 @@
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
 /* The supported allocation types */
-#define MEMDEBUG_ALLOC_TYPE_MALLOC                  0x0001
-#define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0002
-#define MEMDEBUG_ALLOC_TYPE_REALLOC                 0x0004
-#define MEMDEBUG_ALLOC_TYPE_STD                     0x0007
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC             0x0008
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          0x0010
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  0x0018
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          0x0020
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0040
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0080
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0100
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC                 0x01E0
-#define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x0200
-#define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x0400
-#define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x0800
-#define MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC            0x1000
-#define MEMDEBUG_ALLOC_TYPE_ZONE                    0x1E00
+#define MEMDEBUG_ALLOC_TYPE_MALLOC                  0x0001L
+#define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0002L
+#define MEMDEBUG_ALLOC_TYPE_REALLOC                 0x0004L
+#define MEMDEBUG_ALLOC_TYPE_STD                     0x0007L
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC             0x0008L
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          0x0010L
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  0x0018L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          0x0020L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0040L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0080L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0100L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC                 0x01E0L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x0200L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x0400L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x0800L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC            0x1000L
+#define MEMDEBUG_ALLOC_TYPE_ZONE                    0x1E00L
 
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
 
 /* Definition of the type for the allocation type */
-typedef unsigned int memdebug_alloc_type;
+typedef unsigned long int memdebug_alloc_type;
 
 /* Definition of a boolean type, as usual */
 typedef enum { MEMDEBUG_FALSE = 0, MEMDEBUG_TRUE = 1 } memdebug_bool;
