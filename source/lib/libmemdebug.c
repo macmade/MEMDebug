@@ -121,7 +121,7 @@
 #define MEMDEBUG_FENCE_SIZE sizeof( memdebug_fence )
 
 /*  */
-#define MEMDEBUG_ALLOC_SIZE( size ) ( size ) + ( 2 * FENCE_SIZE )
+#define MEMDEBUG_ALLOC_SIZE( size ) ( size ) + ( 2 * MEMDEBUG_FENCE_SIZE )
 
 /* Definition of the type for the allocation type */
 typedef unsigned long int memdebug_alloc_type;
@@ -595,7 +595,7 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc( size ) ) ) {
+    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to malloc() failed. Reason: %s",
@@ -631,7 +631,7 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     
     /* Allocates memory */
     /* We don't use calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )malloc( size1 * size2 ) ) ) {
+    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
         
         memdebug_warning(
             "The call to calloc() failed. Reason: %s",
@@ -669,7 +669,7 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )realloc( ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to realloc() failed. Reason: %s",
@@ -726,7 +726,7 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )__builtin_alloca( size ) ) ) {
+    if( NULL == ( ptr = ( void * )__builtin_alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to __builtin_alloca() failed. Reason: %s",
@@ -762,7 +762,7 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )alloca( size ) ) ) {
+    if( NULL == ( ptr = ( void * )alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to alloca() failed. Reason: %s",
@@ -802,7 +802,7 @@ void * memdebug_gc_malloc( size_t size, const char * file, const int line, const
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )GC_malloc( size ) ) ) {
+    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to GC_malloc() failed. Reason: %s",
@@ -836,7 +836,7 @@ void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )GC_malloc_atomic( size ) ) ) {
+    if( NULL == ( ptr = ( void * )GC_malloc_atomic( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to GC_malloc_atomic() failed. Reason: %s",
@@ -872,7 +872,7 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
     
     /* Allocates memory */
     /* We don't use GC_calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )GC_malloc( size1 * size2 ) ) ) {
+    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
         
         memdebug_warning(
             "The call to GC_calloc() failed. Reason: %s",
@@ -910,7 +910,7 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )GC_realloc( ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )GC_realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to GC_realloc() failed. Reason: %s",
@@ -938,7 +938,7 @@ void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const cha
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, size ) ) ) {
+    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_malloc() failed. Reason: %s",
@@ -964,7 +964,7 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
     
     /* Allocates memory */
     /* We don't use malloc_zone_calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, size1 * size2 ) ) ) {
+    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_calloc() failed. Reason: %s",
@@ -992,7 +992,7 @@ void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size, const cha
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc_zone_valloc( zone, size ) ) ) {
+    if( NULL == ( ptr = ( void * )malloc_zone_valloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_valloc() failed. Reason: %s",
@@ -1026,7 +1026,7 @@ void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t si
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( zone, ptr, size ) ) ) {
+    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( zone, ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_realloc() failed. Reason: %s",
