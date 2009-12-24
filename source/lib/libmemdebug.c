@@ -630,7 +630,8 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )calloc( size1, size2 ) ) ) {
+    /* We don't use calloc as we want to add room for the fence */
+    if( NULL == ( ptr = ( void * )malloc( size1 * size2 ) ) ) {
         
         memdebug_warning(
             "The call to calloc() failed. Reason: %s",
@@ -641,6 +642,9 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
         );
         
     } else {
+        
+        /* Sets all bits to 0 */
+        memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_CALLOC );
@@ -867,7 +871,8 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )GC_calloc( size1, size2 ) ) ) {
+    /* We don't use GC_calloc as we want to add room for the fence */
+    if( NULL == ( ptr = ( void * )GC_malloc( size1 * size2 ) ) ) {
         
         memdebug_warning(
             "The call to GC_calloc() failed. Reason: %s",
@@ -878,6 +883,9 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
         );
         
     } else {
+        
+        /* Sets all bits to 0 */
+        memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC );
@@ -955,7 +963,8 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc_zone_calloc( zone, size1, size2 ) ) ) {
+    /* We don't use malloc_zone_calloc as we want to add room for the fence */
+    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, size1 * size2 ) ) ) {
         
         memdebug_warning(
             "The call to malloc_zone_calloc() failed. Reason: %s",
@@ -966,6 +975,9 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
             );
         
     } else {
+        
+        /* Sets all bits to 0 */
+        memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC );
