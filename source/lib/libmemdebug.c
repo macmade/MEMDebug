@@ -92,6 +92,8 @@
 /* Horizontal ruler */
 #define MEMDEBUG_HR "#-----------------------------------------------------------------------------------------------------------------\n"
 
+#define MEMDEBUG_REV "# \n# $Revision$\n# $Date$\n"
+
 /* The supported allocation types */
 #define MEMDEBUG_ALLOC_TYPE_MALLOC                  0x0001L
 #define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0002L
@@ -1216,6 +1218,7 @@ void memdebug_backtrace( unsigned int skip_levels )
     printf(
         MEMDEBUG_HR
         "# MEMDebug - Backtrace\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
         "# \n"
     );
@@ -1432,6 +1435,7 @@ static void memdebug_sig_handler( int id )
             printf(
                 MEMDEBUG_HR
                 "# MEMDebug: SIGSEGV\n"
+                MEMDEBUG_REV
                 MEMDEBUG_HR
                 "# \n"
                 "# A segmentation fault was detected.\n"
@@ -1443,6 +1447,7 @@ static void memdebug_sig_handler( int id )
             printf( 
                 MEMDEBUG_HR
                 "# MEMDebug: SIGBUS\n"
+                MEMDEBUG_REV
                 MEMDEBUG_HR
                 "# \n"
                 "# A bus error was detected.\n"
@@ -1499,6 +1504,7 @@ static void memdebug_warning( const char * str, const char * file, const int lin
     printf(
         MEMDEBUG_HR
         "# MEMDebug: WARNING\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
         "# \n"
         "# "
@@ -1715,6 +1721,7 @@ void memdebug_print_status( void )
     printf(
         MEMDEBUG_HR
         "# MEMDebug - Status\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
         "# \n"
         "# - Total allocated objects:               %lu\n"
@@ -1753,6 +1760,7 @@ void memdebug_print_objects( void )
     printf(
         MEMDEBUG_HR
         "# MEMDebug - Allocated objects\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
     );
     
@@ -1797,6 +1805,7 @@ void memdebug_print_free( void )
     printf(
         MEMDEBUG_HR
         "# MEMDebug - Freed objects\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
     );
     
@@ -1845,6 +1854,7 @@ void memdebug_print_active( void )
     printf(
         MEMDEBUG_HR
         "# MEMDebug - Active objects\n"
+        MEMDEBUG_REV
         MEMDEBUG_HR
     );
     
