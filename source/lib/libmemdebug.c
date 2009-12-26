@@ -581,10 +581,10 @@ static void memdebug_write_fence( struct memdebug_object * object )
 {
     memdebug_fence * ptr;
     
-    ptr                      = ( ( memdebug_fence * )object->ptr - 1 );
-    *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
-    ptr                      = ( memdebug_fence * )( ( char * )ptr + object->size ) + 1;
-    *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
+    ptr      = ( ( memdebug_fence * )object->ptr - 1 );
+    *( ptr ) = MEMDEBUG_FENCE_VAL;
+    ptr      = ( memdebug_fence * )( ( char * )ptr + object->size ) + 1;
+    *( ptr ) = MEMDEBUG_FENCE_VAL;
 }
 
 /**
@@ -592,19 +592,18 @@ static void memdebug_write_fence( struct memdebug_object * object )
  */
 static memdebug_bool memdebug_check_fence( struct memdebug_object * object )
 {
-    char * ptr;
+    memdebug_fence * ptr;
     
-    ptr  = ( char * )object->ptr;
-    ptr -= MEMDEBUG_FENCE_SIZE;
+    ptr  = ( ( memdebug_fence * )object->ptr - 1 );
     
-    if( *( memdebug_fence * )ptr != MEMDEBUG_FENCE_VAL ) {
+    if( *( ptr ) != MEMDEBUG_FENCE_VAL ) {
         
         return MEMDEBUG_FALSE;
     }
     
-    ptr += object->size + MEMDEBUG_FENCE_SIZE;
+    ptr = ( memdebug_fence * )( ( char * )ptr + object->size ) + 1;
     
-    if( *( memdebug_fence * )ptr != MEMDEBUG_FENCE_VAL ) {
+    if( *( ptr ) != MEMDEBUG_FENCE_VAL ) {
         
         return MEMDEBUG_FALSE;
     }
