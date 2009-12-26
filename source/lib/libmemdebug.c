@@ -356,7 +356,7 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     
     object = &memdebug_trace->objects[ memdebug_trace->num_objects - 1 ];
     
-    object->ptr        = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
+    object->ptr        = ptr;
     object->size       = size;
     object->alloc_file = file;
     object->alloc_line = line;
@@ -392,6 +392,8 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
         memdebug_trace->memory_total  += size;
         memdebug_trace->memory_active += size;
     }
+    
+    memdebug_write_fence( object );
     
     /* Returns the new object */
     return object;    
@@ -436,7 +438,7 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     }
     
     /* Updates the memory record informations */
-    object->ptr        = ( void * )( ( char * )ptr_new + MEMDEBUG_FENCE_SIZE );
+    object->ptr        = ptr_new;
     object->alloc_file = file;
     object->alloc_line = line;
     object->alloc_func = func;
@@ -548,11 +550,11 @@ static struct memdebug_object * memdebug_get_object( void * ptr )
  */
 static void memdebug_write_fence( struct memdebug_object * object )
 {
-    char * ptr;
+    memdebug_fence * ptr;
     
-    ptr                      = ( char * )object->ptr;
+    ptr                      = ( ( memdebug_fence * )object->ptr - 1 );
     *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
-    ptr                     += object->size + MEMDEBUG_FENCE_SIZE;
+    ptr                      = ( memdebug_fence * )( ( char * )ptr + object->size ) + 1;
     *( memdebug_fence * )ptr = MEMDEBUG_FENCE_VAL;
 }
 
@@ -607,10 +609,10 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_MALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -645,13 +647,13 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Sets all bits to 0 */
         memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_CALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -683,12 +685,14 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
             strerror( errno )
         );
         return ptr_new;
+        
+    } else {
+        
+        ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
+        
+        /* Updates the memory record object */
+        memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_REALLOC );
     }
-    
-    /* Updates the memory record object */
-    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_REALLOC );
-    
-    ptr_new = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     
     /* Returns the address of the reallocated area */
     return ptr_new;
@@ -709,7 +713,7 @@ void memdebug_free( void * ptr, const char * file, const int line, const char * 
     memdebug_free_object( ptr, file, line, func );
     
     /* Frees the memory area */
-    free( ( char * )ptr - MEMDEBUG_FENCE_SIZE );
+    free( ( memdebug_fence * )ptr - 1 );
 }
 
 /* Checks if the alloca function is available */
@@ -744,10 +748,10 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -782,10 +786,10 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ALLOCA );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -824,10 +828,10 @@ void * memdebug_gc_malloc( size_t size, const char * file, const int line, const
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -860,10 +864,10 @@ void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -898,13 +902,13 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Sets all bits to 0 */
         memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -936,12 +940,14 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
             strerror( errno )
         );
         return ptr_new;
+        
+    } else {
+        
+        ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
+        
+        /* Updates the memory record object */
+        memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC );
     }
-    
-    /* Updates the memory record object */
-    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC );
-    
-    ptr_new = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     
     /* Returns the address of the reallocated area */
     return ptr_new;
@@ -968,10 +974,10 @@ void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const cha
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -996,13 +1002,13 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Sets all bits to 0 */
         memset( ptr, 0, size1 * size2 );
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size1 * size2, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -1026,10 +1032,10 @@ void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size, const cha
         
     } else {
         
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC );
-        
-        ptr = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     }
     
     /* Returns the address of the allocated area */
@@ -1042,7 +1048,7 @@ void memdebug_malloc_zone_free( malloc_zone_t * zone, void * ptr, const char * f
     memdebug_free_object( ptr, file, line, func );
     
     /* Frees the memory area */
-    malloc_zone_free( zone, ( char * )ptr - MEMDEBUG_FENCE_SIZE );
+    malloc_zone_free( zone, ( memdebug_fence * )ptr - 1 );
 }
 
 void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t size, const char * file, const int line, const char * func )
@@ -1060,12 +1066,14 @@ void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t si
             strerror( errno )
         );
         return ptr_new;
+        
+    } else {
+        
+        ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
+        
+        /* Updates the memory record object */
+        memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC );
     }
-    
-    /* Updates the memory record object */
-    memdebug_update_object( ptr, ptr_new, size, file, line, func, MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC );
-    
-    ptr_new = ( void * )( ( char * )ptr + MEMDEBUG_FENCE_SIZE );
     
     /* Returns the address of the reallocated area */
     return ptr_new;
