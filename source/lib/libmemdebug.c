@@ -1723,6 +1723,8 @@ void memdebug_print_status( void )
         "# MEMDebug - Status\n"
         MEMDEBUG_REV
         MEMDEBUG_HR
+    );
+    printf(
         "# \n"
         "# - Total allocated objects:               %lu\n"
         "# - Number of non-freed objects:           %lu\n"
