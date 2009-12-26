@@ -419,10 +419,11 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
         
         memdebug_warning(
-            "Trying to reallocate a non-existing object",
+            "Trying to reallocate a non-existing object (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
@@ -430,20 +431,22 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     if( object->free == MEMDEBUG_TRUE ) {
         
         memdebug_warning(
-            "Trying to reallocate a freed object",
+            "Trying to reallocate a freed object (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
     if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
         
         memdebug_warning(
-            "A buffer overflow was detected",
+            "A buffer overflow was detected (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
@@ -489,10 +492,11 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
         
         memdebug_warning(
-            "Trying to free a non-existing object",
+            "Trying to free a non-existing object (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
@@ -500,20 +504,22 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     if( object->free == MEMDEBUG_TRUE ) {
         
         memdebug_warning(
-            "Trying to free a freed object",
+            "Trying to free a freed object (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
     if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
         
         memdebug_warning(
-            "A buffer overflow was detected",
+            "A buffer overflow was detected (pointer address: %p)",
             file,
             line,
-            func
+            func,
+            ptr
         );
     }
     
