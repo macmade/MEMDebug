@@ -96,22 +96,23 @@
 
 /* The supported allocation types */
 #define MEMDEBUG_ALLOC_TYPE_MALLOC                  0x0001L
-#define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0002L
-#define MEMDEBUG_ALLOC_TYPE_REALLOC                 0x0004L
-#define MEMDEBUG_ALLOC_TYPE_STD                     0x0007L
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC             0x0008L
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          0x0010L
-#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  0x0018L
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          0x0020L
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0040L
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0080L
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0100L
-#define MEMDEBUG_ALLOC_TYPE_OBJC_GC                 0x01E0L
-#define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x0200L
-#define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x0400L
-#define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x0800L
-#define MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC            0x1000L
-#define MEMDEBUG_ALLOC_TYPE_ZONE                    0x1E00L
+#define MEMDEBUG_ALLOC_TYPE_VALLOC                  0x0002L
+#define MEMDEBUG_ALLOC_TYPE_CALLOC                  0x0004L
+#define MEMDEBUG_ALLOC_TYPE_REALLOC                 0x0008L
+#define MEMDEBUG_ALLOC_TYPE_STD                     0x000FL
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_FUNC             0x0010L
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA_BUILTIN          0x0020L
+#define MEMDEBUG_ALLOC_TYPE_ALLOCA                  0x00F0L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC          0x0100L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_MALLOC_ATOMIC   0x0200L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_CALLOC          0x0400L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC_REALLOC         0x0800L
+#define MEMDEBUG_ALLOC_TYPE_OBJC_GC                 0x0F00L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_MALLOC             0x1000L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_CALLOC             0x2000L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_VALLOC             0x4000L
+#define MEMDEBUG_ALLOC_TYPE_ZONE_REALLOC            0x8000L
+#define MEMDEBUG_ALLOC_TYPE_ZONE                    0xF000L
 
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
@@ -641,6 +642,42 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
         
         /* Creates a new memory record object for the allocated area */
         memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_MALLOC );
+    }
+    
+    /* Returns the address of the allocated area */
+    return ptr;
+}
+
+/**
+ * Allocates some memory
+ * 
+ * @param   size_t          The memory size to allocate
+ * @param   const char *    The file in which the call was made
+ * @param   const int       The line of the file in which the call was made
+ * @param   const char *    The name of the function in which the call was made
+ * @return  void *          A pointer to the allocated memory area
+ */
+void * memdebug_valloc( size_t size, const char * file, const int line, const char * func )
+{
+    void * ptr;
+    
+    /* Allocates memory */
+    if( NULL == ( ptr = ( void * )valloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
+        
+        memdebug_warning(
+            "The call to valloc() failed. Reason: %s",
+            file,
+            line,
+            func,
+            strerror( errno )
+        );
+        
+    } else {
+        
+        ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
+        
+        /* Creates a new memory record object for the allocated area */
+        memdebug_new_object( ptr, size, file, line, func, MEMDEBUG_ALLOC_TYPE_VALLOC );
     }
     
     /* Returns the address of the allocated area */

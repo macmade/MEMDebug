@@ -68,6 +68,7 @@
     
 /* Redefines the memory functions */
 #define malloc( size )          memdebug_malloc( size, __FILE__, __LINE__, __func__ )
+#define valloc( size )          memdebug_valloc( size, __FILE__, __LINE__, __func__ )
 #define calloc( size1, size2 )  memdebug_calloc( size1, size2, __FILE__, __LINE__, __func__ )
 #define realloc( ptr, size )    memdebug_realloc( ptr, size, __FILE__, __LINE__, __func__ )
 #define free( ptr )             memdebug_free( ptr, __FILE__, __LINE__, __func__ )
@@ -124,6 +125,7 @@
 
 /* Prototypes for the standard memory functions */
 void * memdebug_malloc( size_t size, const char * file, const int line, const char * func );
+void * memdebug_valloc( size_t size, const char * file, const int line, const char * func );
 void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int line, const char * func );
 void * memdebug_realloc( void * ptr, size_t size, const char * file, const int line, const char * func );
 void   memdebug_free( void * ptr, const char * file, int line, const char * func );
