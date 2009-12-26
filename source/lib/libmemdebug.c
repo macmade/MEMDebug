@@ -437,6 +437,16 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
         );
     }
     
+    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
+        
+        memdebug_warning(
+            "A buffer overflow was detected",
+            file,
+            line,
+            func
+        );
+    }
+    
     /* Updates the memory record informations */
     object->ptr        = ptr_new;
     object->alloc_file = file;
@@ -491,6 +501,16 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
         
         memdebug_warning(
             "Trying to free a freed object",
+            file,
+            line,
+            func
+        );
+    }
+    
+    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
+        
+        memdebug_warning(
+            "A buffer overflow was detected",
             file,
             line,
             func

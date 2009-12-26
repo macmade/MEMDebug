@@ -58,6 +58,7 @@ int main( void )
     unsigned char * m2;
     unsigned char * m3;
     unsigned char * m4;
+    unsigned char * m5;
     
     m1 = NULL;
     m2 = NULL;
@@ -84,15 +85,21 @@ int main( void )
     /* Allocates some memory */
     m3 = ( unsigned char * )malloc( 2048 * sizeof( unsigned char ) );
     m4 = ( unsigned char * )malloc( 256 * sizeof( unsigned char ) );
+    m5 = ( unsigned char * )malloc( 256 * sizeof( unsigned char ) );
     
     /* Free some memory */
     free( m3 );
     
-    /* Fills an allocated memory area */
+    /* Fills allocated memory areas */
     for( i = 0; i < 256; i++ ) {
         
         m4[ i ] = i;
+        m5[ i ] = i;
     }
+    
+    /* Buffer overflow */
+    m5[ 256 ] = 0;
+    free( m5 );
     
     /* This will create a segmentation fault (SIGSEGV) */
     m3 = 0;
