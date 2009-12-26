@@ -117,19 +117,19 @@
 /* The number of bytes for each line of the memory data dump */
 #define MEMDEBUG_DUMP_BYTES 24
 
-/*  */
+/* The value of the fence, used to check for buffer overflows */
 #define MEMDEBUG_FENCE_VAL 0x3CC3L
 
-/*  */
+/* The size of the fence value  */
 #define MEMDEBUG_FENCE_SIZE sizeof( memdebug_fence )
 
-/*  */
+/* The size of an allocation, plus the two fences values */
 #define MEMDEBUG_ALLOC_SIZE( size ) ( size ) + ( 2 * MEMDEBUG_FENCE_SIZE )
 
 /* Definition of the type for the allocation type */
 typedef unsigned long int memdebug_alloc_type;
 
-/*  */
+/* The type used for the fence */
 typedef unsigned long int memdebug_fence;
 
 /* Definition of a boolean type, as usual */
