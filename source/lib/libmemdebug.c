@@ -169,7 +169,7 @@ struct memdebug_object
     const char * free_func;
     
     /* Checks if we are using GCC */
-#ifdef __GNUC__
+    #ifdef __GNUC__
     
     /* The address of the function in which the object was allocated */
     void * alloc_func_addr;
@@ -177,7 +177,7 @@ struct memdebug_object
     /* The address of the function in which the object was freed */
     void * free_func_addr;
     
-#endif
+    #endif
 };
 
 /* Structure for the memory trace pool */
