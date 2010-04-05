@@ -266,8 +266,8 @@ static void memdebug_init( void )
     struct sigaction sa2;
     
     /* Nothing to do if MEMDebug is already initialized */
-    if( memdebug_inited == MEMDEBUG_TRUE ) {
-        
+    if( memdebug_inited == MEMDEBUG_TRUE )
+    {
         return;
     }
     
@@ -277,34 +277,38 @@ static void memdebug_init( void )
     sigemptyset( &sa1.sa_mask );
     
     /* Handles segmentation faults ( SIGSEGV ) */
-    if( sigaction( SIGSEGV, &sa1, &sa2 ) != 0 ) {
-        
-        memdebug_fatal(
+    if( sigaction( SIGSEGV, &sa1, &sa2 ) != 0 )
+    {
+        memdebug_fatal
+        (
             "MEMDebug error: cannot set a handler for SIGSEGV\n"
         );
     }
     
     /* Handles bus errors ( SIGBUS ) */
-    if( sigaction( SIGBUS, &sa1, &sa2 ) != 0 ) {
-        
-        memdebug_fatal(
+    if( sigaction( SIGBUS, &sa1, &sa2 ) != 0 )
+    {
+        memdebug_fatal
+        (
             "MEMDebug error: cannot set a handler for SIGBUS\n"
         );
     }
     
     /* Allocates the memory record pool structure */
-    if( NULL == ( memdebug_trace = ( struct memdebug_pool * )calloc( 1, sizeof( struct memdebug_pool ) ) ) ) {
-        
-        memdebug_fatal(
+    if( NULL == ( memdebug_trace = ( struct memdebug_pool * )calloc( 1, sizeof( struct memdebug_pool ) ) ) )
+    {
+        memdebug_fatal
+        (
             "MEMDebug error: cannot initialize the trace pool. Reason: %s\n",
             strerror( errno )
         );
     }
     
     /* Allocates room for memory record objects */
-    if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )calloc( MEMDEBUG_POOL_SIZE, sizeof( struct memdebug_object ) ) ) ) {
-        
-        memdebug_fatal(
+    if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )calloc( MEMDEBUG_POOL_SIZE, sizeof( struct memdebug_object ) ) ) )
+    {
+        memdebug_fatal
+        (
             "MEMDebug error: cannot initialize the trace pool. Reason: %s\n",
             strerror( errno )
         );
@@ -339,12 +343,13 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     MEMDEBUG_INIT_CHECK;
     
     /* Checks there's enough room in the current pool for a new object */
-    if( memdebug_trace->pool_size == memdebug_trace->num_objects ) {
-        
+    if( memdebug_trace->pool_size == memdebug_trace->num_objects )
+    {
         /* No, let's reallocate some memory */
-        if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )realloc( memdebug_trace->objects, memdebug_trace->pool_size + MEMDEBUG_POOL_SIZE ) ) ) {
-            
-            memdebug_fatal(
+        if( NULL == ( memdebug_trace->objects = ( struct memdebug_object * )realloc( memdebug_trace->objects, memdebug_trace->pool_size + MEMDEBUG_POOL_SIZE ) ) )
+        {
+            memdebug_fatal
+            (
                 "MEMDebug error: cannot reallocate the MEMDebug pool. Reason: %s\n",
                 strerror( errno )
             );
@@ -367,14 +372,15 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     object->alloc_type = alloc_type;
     
     /* Checks if the object is autamatically freed (alloca or GC functions) */
-    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
-        
+    if( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC )
+    {
         /* The object will be automatically freed */
         object->free = MEMDEBUG_TRUE;
         memdebug_trace->num_auto++;
         
-    } else {
-        
+    }
+    else
+    {
         /* The object will need to be manually freed */
         object->free = MEMDEBUG_FALSE;
         memdebug_trace->num_active++;
@@ -389,8 +395,8 @@ static struct memdebug_object * memdebug_new_object( void * ptr, size_t size, co
     #endif
     
     /* Checks if the allocation was made using dynamic memory */
-    if( !( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA ) ) {
-        
+    if( !( alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA ) )
+    {
         /* Updates the memory usage */
         memdebug_trace->memory_total  += size;
         memdebug_trace->memory_active += size;
@@ -419,9 +425,10 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     struct memdebug_object * object;
     
     /* Checks if the address we are trying to reallocate exists in the pool */
-    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( object = memdebug_get_object( ptr ) ) )
+    {
+        memdebug_warning
+        (
             "Trying to reallocate a non-existing object (pointer address: %p)",
             file,
             line,
@@ -431,9 +438,10 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
     }
     
     /* Checks if the memory area was already freed */
-    if( object->free == MEMDEBUG_TRUE ) {
-        
-        memdebug_warning(
+    if( object->free == MEMDEBUG_TRUE )
+    {
+        memdebug_warning
+        (
             "Trying to reallocate a freed object (pointer address: %p)",
             file,
             line,
@@ -442,9 +450,10 @@ static void memdebug_update_object( void * ptr, void * ptr_new, size_t size, con
         );
     }
     
-    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
-        
-        memdebug_warning(
+    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE )
+    {
+        memdebug_warning
+        (
             "A buffer overflow was detected (pointer address: %p)",
             file,
             line,
@@ -492,9 +501,10 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     struct memdebug_object * object;
     
     /* Checks if the address we are trying to free exists in the pool */
-    if( NULL == ( object = memdebug_get_object( ptr ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( object = memdebug_get_object( ptr ) ) )
+    {
+        memdebug_warning
+        (
             "Trying to free a non-existing object (pointer address: %p)",
             file,
             line,
@@ -504,9 +514,10 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
     }
     
     /* Checks if the memory area was already freed */
-    if( object->free == MEMDEBUG_TRUE ) {
-        
-        memdebug_warning(
+    if( object->free == MEMDEBUG_TRUE )
+    {
+        memdebug_warning
+        (
             "Trying to free a freed object (pointer address: %p)",
             file,
             line,
@@ -515,9 +526,10 @@ static void memdebug_free_object( void * ptr, const char * file, const int line,
         );
     }
     
-    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE ) {
-        
-        memdebug_warning(
+    if( memdebug_check_fence( object ) == MEMDEBUG_FALSE )
+    {
+        memdebug_warning
+        (
             "A buffer overflow was detected (pointer address: %p)",
             file,
             line,
@@ -560,11 +572,11 @@ static struct memdebug_object * memdebug_get_object( void * ptr )
     MEMDEBUG_INIT_CHECK;
     
     /* Tries to find the object in the pool */
-    for( i = 0; i < memdebug_trace->num_objects; i++ ) {
-        
+    for( i = 0; i < memdebug_trace->num_objects; i++ )
+    {
         /* Checks if the given pointer is the same as the one in the memory record object */
-        if( memdebug_trace->objects[ i ].ptr == ptr ) {
-            
+        if( memdebug_trace->objects[ i ].ptr == ptr )
+        {
             /* Yes, returns the memory record object corresponding to the given pointer */
             return &memdebug_trace->objects[ i ];
         }
@@ -596,15 +608,15 @@ static memdebug_bool memdebug_check_fence( struct memdebug_object * object )
     
     ptr  = ( ( memdebug_fence * )object->ptr - 1 );
     
-    if( *( ptr ) != MEMDEBUG_FENCE_VAL ) {
-        
+    if( *( ptr ) != MEMDEBUG_FENCE_VAL )
+    {
         return MEMDEBUG_FALSE;
     }
     
     ptr = ( memdebug_fence * )( ( char * )ptr + object->size ) + 1;
     
-    if( *( ptr ) != MEMDEBUG_FENCE_VAL ) {
-        
+    if( *( ptr ) != MEMDEBUG_FENCE_VAL )
+    {
         return MEMDEBUG_FALSE;
     }
     
@@ -625,18 +637,19 @@ void * memdebug_malloc( size_t size, const char * file, const int line, const ch
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to malloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -661,18 +674,19 @@ void * memdebug_valloc( size_t size, const char * file, const int line, const ch
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )valloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )valloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to valloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -699,18 +713,19 @@ void * memdebug_calloc( size_t size1, size_t size2, const char * file, const int
     
     /* Allocates memory */
     /* We don't use calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to calloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Sets all bits to 0 */
@@ -739,9 +754,10 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr_new = ( void * )realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to realloc() failed. Reason: %s",
             file,
             line,
@@ -749,9 +765,9 @@ void * memdebug_realloc( void * ptr, size_t size, const char * file, const int l
             strerror( errno )
         );
         return ptr_new;
-        
-    } else {
-        
+    }
+    else
+    {
         ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
         
         /* Updates the memory record object */
@@ -800,18 +816,19 @@ void * memdebug_builtin_alloca( size_t size, const char * file, const int line, 
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )__builtin_alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )__builtin_alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to __builtin_alloca() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -838,18 +855,19 @@ void * memdebug_alloca( size_t size, const char * file, const int line, const ch
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )alloca( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to alloca() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -880,18 +898,19 @@ void * memdebug_gc_malloc( size_t size, const char * file, const int line, const
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to GC_malloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -916,18 +935,19 @@ void * memdebug_gc_malloc_atomic( size_t size, const char * file, const int line
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )GC_malloc_atomic( MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )GC_malloc_atomic( MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to GC_malloc_atomic() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -954,18 +974,19 @@ void * memdebug_gc_calloc( size_t size1, size_t size2, const char * file, const 
     
     /* Allocates memory */
     /* We don't use GC_calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )GC_malloc( MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to GC_calloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Sets all bits to 0 */
@@ -994,9 +1015,10 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )GC_realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr_new = ( void * )GC_realloc( ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to GC_realloc() failed. Reason: %s",
             file,
             line,
@@ -1004,9 +1026,9 @@ void * memdebug_gc_realloc( void * ptr, size_t size, const char * file, const in
             strerror( errno )
         );
         return ptr_new;
-        
-    } else {
-        
+    }
+    else
+    {
         ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
         
         /* Updates the memory record object */
@@ -1026,18 +1048,19 @@ void * memdebug_malloc_zone_malloc( malloc_zone_t * zone, size_t size, const cha
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to malloc_zone_malloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -1054,18 +1077,19 @@ void * memdebug_malloc_zone_calloc( malloc_zone_t * zone, size_t size1, size_t s
     
     /* Allocates memory */
     /* We don't use malloc_zone_calloc as we want to add room for the fence */
-    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )malloc_zone_malloc( zone, MEMDEBUG_ALLOC_SIZE( size1 * size2 ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to malloc_zone_calloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Sets all bits to 0 */
@@ -1084,18 +1108,19 @@ void * memdebug_malloc_zone_valloc( malloc_zone_t * zone, size_t size, const cha
     void * ptr;
     
     /* Allocates memory */
-    if( NULL == ( ptr = ( void * )malloc_zone_valloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr = ( void * )malloc_zone_valloc( zone, MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to malloc_zone_valloc() failed. Reason: %s",
             file,
             line,
             func,
             strerror( errno )
         );
-        
-    } else {
-        
+    }
+    else
+    {
         ptr = ( void * )( ( memdebug_fence * )ptr + 1 );
         
         /* Creates a new memory record object for the allocated area */
@@ -1120,9 +1145,10 @@ void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t si
     void * ptr_new;
     
     /* Rellocates memory */
-    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( zone, ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) ) {
-        
-        memdebug_warning(
+    if( NULL == ( ptr_new = ( void * )malloc_zone_realloc( zone, ptr, MEMDEBUG_ALLOC_SIZE( size ) ) ) )
+    {
+        memdebug_warning
+        (
             "The call to malloc_zone_realloc() failed. Reason: %s",
             file,
             line,
@@ -1130,9 +1156,9 @@ void * memdebug_malloc_zone_realloc( malloc_zone_t * zone, void * ptr, size_t si
             strerror( errno )
         );
         return ptr_new;
-        
-    } else {
-        
+    }
+    else
+    {
         ptr_new = ( void * )( ( memdebug_fence * )ptr_new + 1 );
         
         /* Updates the memory record object */
@@ -1162,22 +1188,22 @@ static void memdebug_dump( struct memdebug_object * object )
     read_ptr = ( unsigned char * )object->ptr;
     
     /* Reads the memory area */
-    for( i = 0; i < object->size; i += MEMDEBUG_DUMP_BYTES ) {
-        
+    for( i = 0; i < object->size; i += MEMDEBUG_DUMP_BYTES )
+    {
         /* Byte offset */
         printf( "#   %010lu: ", i );
         
         /* Prints the hexadecimal representation */
-        for( j = i; j < i + MEMDEBUG_DUMP_BYTES; j++ ) {
-            
+        for( j = i; j < i + MEMDEBUG_DUMP_BYTES; j++ )
+        {
             /* Checks if we have data to display */
-            if( j < object->size ) {
-                
+            if( j < object->size )
+            {
                 /* Prints the hexadecimal data */
                 printf( "%02X ", ( unsigned char )read_ptr[ j ] );
-                
-            } else {
-                
+            }
+            else
+            {
                 /* No data to display - Pad */
                 printf( "   " );
             }
@@ -1187,25 +1213,26 @@ static void memdebug_dump( struct memdebug_object * object )
         printf( "| " );
         
         /* Prints the ASCII representation */
-        for( j = i; j < i + MEMDEBUG_DUMP_BYTES; j++ ) {
-            
+        for( j = i; j < i + MEMDEBUG_DUMP_BYTES; j++ )
+        {
             /* Reset */
             c = 0;
             
             /* Checks if we have data to display */
-            if( j < object->size ) {
-                
+            if( j < object->size )
+            {
                 /* Gets the current character */
                 c = ( unsigned char )read_ptr[ j ];
                 
                 /* Checks if we can print the character */
-                if( ( ( ( c & 0x80 ) == 0 ) && isprint( ( int )c ) ) ) {
-                    
+                if( ( ( ( c & 0x80 ) == 0 ) && isprint( ( int )c ) ) )
+                {
                     /* Prints the current character */
                     printf( "%c", c );
                     
-                } else {
-                    
+                }
+                else
+                {
                     /* Unprintable character */
                     printf( "." );
                 }
@@ -1236,9 +1263,10 @@ void memdebug_backtrace( unsigned int skip_levels )
     unsigned long int frame_num;
     
     /* Allocates enough memory for the backtrace informations */
-    if( NULL == ( trace = calloc( MEMDEBUG_BACKTRACE_SIZE + skip_levels, sizeof( void * ) ) ) ) {
-        
-        memdebug_fatal(
+    if( NULL == ( trace = calloc( MEMDEBUG_BACKTRACE_SIZE + skip_levels, sizeof( void * ) ) ) )
+    {
+        memdebug_fatal
+        (
             "MEMDebug error: cannot allocate memory for the backtrace. Reason: %s\n",
             strerror( errno )
         );
@@ -1251,7 +1279,8 @@ void memdebug_backtrace( unsigned int skip_levels )
     symbols = backtrace_symbols( trace, size );
     
     /* Header */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug - Backtrace\n"
         MEMDEBUG_REV
@@ -1260,24 +1289,25 @@ void memdebug_backtrace( unsigned int skip_levels )
     );
     
     /* Number of stack frames */
-    printf(
+    printf
+    (
         "# Displaying %lu stack frames:\n"
         "# \n",
         ( unsigned long int )size - skip_levels
     );
     
     /* Process each frame */
-    for( i = skip_levels; i < size; i++ ) {
-        
+    for( i = skip_levels; i < size; i++ )
+    {
         /* Current symbol */
         symbol = symbols[ i ];
         
         /* Process each character of the symbol string */
-        for( j = 0; j < strlen( symbol ); j++ ) {
-            
+        for( j = 0; j < strlen( symbol ); j++ )
+        {
             /* Checks if the frame number was passed, as we are going to rewrite it */
-            if( symbol[ j ] != ' ' && ( symbol[ j ] < 48 || symbol[ j ] > 57 ) ) {
-                
+            if( symbol[ j ] != ' ' && ( symbol[ j ] < 48 || symbol[ j ] > 57 ) )
+            {
                 break;
             }
             
@@ -1289,41 +1319,46 @@ void memdebug_backtrace( unsigned int skip_levels )
         frame_num = ( unsigned long int )i - skip_levels;
         
         /* Checks the frame number, in order to get a clean outpout */
-        if( frame_num < 10 ) {
-            
-            printf(
+        if( frame_num < 10 )
+        {
+            printf
+            (
                 "#     %lu:    %s\n",
                 frame_num,
                 ++symbol
             );
-            
-        } else if( frame_num < 100 ) {
-            
-            printf(
+        }
+        else if( frame_num < 100 )
+        {
+            printf
+            (
                 "#     %lu:   %s\n",
                 frame_num,
                 ++symbol
             );
-            
-        } else if( frame_num < 1000 ) {
-            
-            printf(
+        }
+        else if( frame_num < 1000 )
+        {
+            printf
+            (
                 "#     %lu:  %s\n",
                 frame_num,
                 ++symbol
             );
-            
-        } else if( frame_num < 10000 ) {
-            
-            printf(
+        }
+        else if( frame_num < 10000 )
+        {
+            printf
+            (
                 "#     %lu: %s\n",
                 frame_num,
                 ++symbol
             );
-            
-        } else {
-            
-            printf(
+        }
+        else
+        {
+            printf
+            (
                 "#     %lu:%s\n",
                 frame_num,
                 ++symbol
@@ -1332,7 +1367,8 @@ void memdebug_backtrace( unsigned int skip_levels )
     }
     
     /* Horizontal ruler */
-    printf(
+    printf
+    (
         "# \n"
         MEMDEBUG_HR
     );
@@ -1354,23 +1390,26 @@ static void memdebug_ask_debug_cmd( void )
     char c;
     static unsigned int skip_levels = 3;
     
-    printf(
-           "# \n"
-           "# Your choices are:\n"
-           "# \n"
-           "#     - c : Default: continue the program execution\n"
-           "#     - q : Abort the program execution\n"
-           "#     - s : Display the status of the memory allocations\n"
-           );
+    printf
+    (
+       "# \n"
+       "# Your choices are:\n"
+       "# \n"
+       "#     - c : Default: continue the program execution\n"
+       "#     - q : Abort the program execution\n"
+       "#     - s : Display the status of the memory allocations\n"
+   );
     
     /* Checks if we can have a backtrace */
     #ifdef MEMDEBUG_HAVE_EXECINFO_H
-    printf(
+    printf
+    (
         "#     - t : Display the backtrace (function call stack)\n"
     );
     #endif
     
-    printf(
+    printf
+    (
         "#     - p : Display all memory records (active and free)\n"
         "#     - a : Display only the active memory records\n"
         "#     - f : Display only the freed memory records\n"
@@ -1385,8 +1424,8 @@ static void memdebug_ask_debug_cmd( void )
     c = getchar();
     
     /* Checks if the user choosed a command */
-    if( c == '\n' ) {
-        
+    if( c == '\n' )
+    {
         /* Default - continues the program execution */
         return;
     }
@@ -1395,8 +1434,8 @@ static void memdebug_ask_debug_cmd( void )
     while( getchar() != '\n' ) {}
     
     /* Checks if the user answer */
-    if( c == 's' || c == 'S' ) {
-        
+    if( c == 's' || c == 'S' )
+    {
         /* Prints the memory allocation status */
         printf( "\n" );
         memdebug_print_status();
@@ -1406,8 +1445,8 @@ static void memdebug_ask_debug_cmd( void )
     /* Checks if we can have a backtrace */
     #ifdef MEMDEBUG_HAVE_EXECINFO_H
     
-    else if( c == 't' || c == 'T' ) {
-        
+    else if( c == 't' || c == 'T' )
+    {
         /* Prints the function call stack */
         printf( "\n" );
         memdebug_backtrace( skip_levels );
@@ -1415,35 +1454,36 @@ static void memdebug_ask_debug_cmd( void )
     
     #endif
     
-    else if( c == 'p' || c == 'P' ) {
-        
+    else if( c == 'p' || c == 'P' )
+    {
         /* Prints all allocated objects */
         printf( "\n" );
         memdebug_print_objects();
-        
-    } else if( c == 'a' || c == 'A' ) {
-        
+    }
+    else if( c == 'a' || c == 'A' )
+    {
         /* Prints all active objects */
         printf( "\n" );
         memdebug_print_active();
-        
-    } else if( c == 'f' || c == 'F' ) {
-        
+    }
+    else if( c == 'f' || c == 'F' )
+    {
         /* Prints all freed objects */
         printf( "\n" );
         memdebug_print_free();
-        
-    } else if( c == 'q' || c == 'Q' ) {
-        
+    }
+    else if( c == 'q' || c == 'Q' )
+    {
         /* Aborts the program execution */
-        printf(
+        printf
+        (
             "\n"
             "Program execution stopped\n"
         );
         exit( EXIT_FAILURE );
-        
-    } else {
-        
+    }
+    else
+    {
         /* Default - continues the program execution */
         return;
     }
@@ -1463,12 +1503,13 @@ static void memdebug_ask_debug_cmd( void )
 static void memdebug_sig_handler( int id )
 {
     /* Checks the signal ID */
-    if( id == SIGSEGV || id == SIGBUS ) {
-        
-        if( id == SIGSEGV ) {
-            
+    if( id == SIGSEGV || id == SIGBUS )
+    {
+        if( id == SIGSEGV )
+        {
             /* Segmentation fault */
-            printf(
+            printf
+            (
                 MEMDEBUG_HR
                 "# MEMDebug: SIGSEGV\n"
                 MEMDEBUG_REV
@@ -1476,11 +1517,12 @@ static void memdebug_sig_handler( int id )
                 "# \n"
                 "# A segmentation fault was detected.\n"
             );
-            
-        } else {
-            
+        }
+        else
+        {
             /* Bus error */
-            printf( 
+            printf
+            (
                 MEMDEBUG_HR
                 "# MEMDebug: SIGBUS\n"
                 MEMDEBUG_REV
@@ -1495,19 +1537,21 @@ static void memdebug_sig_handler( int id )
         memdebug_ask_debug_cmd();
         
         /* Checks the signal ID */
-        if( id == SIGSEGV ) {
-            
+        if( id == SIGSEGV )
+        {
             /* Segmentation fault */
-            printf(
+            printf
+            (
                 "\n"
                 "SIGSEGV - Segmentation fault\n"
                 "Program execution stopped\n"
             );
-            
-        } else {
-            
+        }
+        else
+        {
             /* Bus error */
-            printf(
+            printf
+            (
                 "\n"
                 "SIGBUS - Bus error\n"
                 "Program execution stopped\n"
@@ -1537,7 +1581,8 @@ static void memdebug_warning( const char * str, const char * file, const int lin
     va_start( ap, func );
     
     /* Issues the warning message */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug: WARNING\n"
         MEMDEBUG_REV
@@ -1546,7 +1591,8 @@ static void memdebug_warning( const char * str, const char * file, const int lin
         "# "
     );
     vprintf( str, ap );
-    printf(
+    printf
+    (
         "\n"
         "# \n"
         "# Function:    %s()\n"
@@ -1573,7 +1619,8 @@ static void memdebug_warning( const char * str, const char * file, const int lin
 static void memdebug_print_object( struct memdebug_object * object )
 {
     /* Pointer address and size */
-    printf(
+    printf
+    (
         "# \n"
         "# - Address:                 %p\n"
         "# - Size:                    %lu\n",
@@ -1582,8 +1629,8 @@ static void memdebug_print_object( struct memdebug_object * object )
     );
     
     /* Checks the allocation type */
-    switch( object->alloc_type ) {
-            
+    switch( object->alloc_type )
+    {
         /* malloc */
         case MEMDEBUG_ALLOC_TYPE_MALLOC:
             
@@ -1670,7 +1717,8 @@ static void memdebug_print_object( struct memdebug_object * object )
     }
     
     /* Allocation nformations */
-    printf(
+    printf
+    (
         "# \n"
         "# - Allocated in function:   %s()"
         #ifdef __GNUC__
@@ -1689,21 +1737,23 @@ static void memdebug_print_object( struct memdebug_object * object )
     );
     
     /* Checks if the object was freed */
-    if( object->free == MEMDEBUG_TRUE ) {
-        
+    if( object->free == MEMDEBUG_TRUE )
+    {
         /* Checks if the object is automatically freed */
-        if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC ) {
-            
+        if( object->alloc_type & MEMDEBUG_ALLOC_TYPE_ALLOCA || object->alloc_type & MEMDEBUG_ALLOC_TYPE_OBJC_GC )
+        {
             /* Free informations not available */
-            printf(
+            printf
+            (
                 "# - Freed:                   auto\n"
                 "# \n"
             );
-            
-        } else {
-            
+        }
+        else
+        {
             /* Free informations */
-            printf(
+            printf
+            (
                 "# - Freed:                   yes\n"
                 "# - Freed in function:       %s()"
                 #ifdef __GNUC__
@@ -1721,11 +1771,12 @@ static void memdebug_print_object( struct memdebug_object * object )
                 object->free_line
             );
         }
-        
-    } else {
-        
+    }
+    else
+    {
         /* No free information */
-        printf(
+        printf
+        (
             "# - Freed:                   no\n"
             "# \n"
             "# - Memory dump:\n"
@@ -1738,7 +1789,8 @@ static void memdebug_print_object( struct memdebug_object * object )
     }
     
     /* Prints a separator */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
     );
 }
@@ -1754,13 +1806,15 @@ void memdebug_print_status( void )
     MEMDEBUG_INIT_CHECK;
     
     /* Prints the allocation status */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug - Status\n"
         MEMDEBUG_REV
         MEMDEBUG_HR
     );
-    printf(
+    printf
+    (
         "# \n"
         "# - Total allocated objects:               %lu\n"
         "# - Number of non-freed objects:           %lu\n"
@@ -1771,7 +1825,8 @@ void memdebug_print_status( void )
         memdebug_trace->num_free,
         memdebug_trace->num_auto
     );
-    printf(
+    printf
+    (
         "# \n"
         "# - Total memory:                          %lu\n"
         "# - Active memory:                         %lu\n"
@@ -1795,7 +1850,8 @@ void memdebug_print_objects( void )
     MEMDEBUG_INIT_CHECK;
     
     /* Header */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug - Allocated objects\n"
         MEMDEBUG_REV
@@ -1803,21 +1859,23 @@ void memdebug_print_objects( void )
     );
     
     /* Checks if objects were allocated */
-    if( memdebug_trace->num_objects == 0 ) {
-        
+    if( memdebug_trace->num_objects == 0 )
+    {
         /* No allocated objects */
-        printf(
+        printf
+        (
             "# No objects were allocated\n"
             MEMDEBUG_HR
         );
-        
-    } else {
-        
+    }
+    else
+    {
         /* Process each allocated object */
-        for( i = 0; i < memdebug_trace->num_objects; i++ ) {
-            
+        for( i = 0; i < memdebug_trace->num_objects; i++ )
+        {
             /* Prints information about the current object */
-            printf(
+            printf
+            (
                 "# \n"
                 "# - Memory record:           #%lu\n",
                 i + 1
@@ -1840,7 +1898,8 @@ void memdebug_print_free( void )
     MEMDEBUG_INIT_CHECK;
     
     /* Header */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug - Freed objects\n"
         MEMDEBUG_REV
@@ -1848,24 +1907,26 @@ void memdebug_print_free( void )
     );
     
     /* Checks if objects were freed */
-    if( memdebug_trace->num_free == 0 ) {
-        
+    if( memdebug_trace->num_free == 0 )
+    {
         /* No freed object */
-        printf(
+        printf
+        (
             "# No objects were freed\n"
             MEMDEBUG_HR
         );
-        
-    } else {
-        
+    }
+    else
+    {
         /* Process each allocated object */
-        for( i = 0; i < memdebug_trace->num_objects; i++ ) {
-            
+        for( i = 0; i < memdebug_trace->num_objects; i++ )
+        {
             /* Checks if the current object was freed */
-            if( memdebug_trace->objects[ i ].free == MEMDEBUG_TRUE ) {
-                
+            if( memdebug_trace->objects[ i ].free == MEMDEBUG_TRUE )
+            {
                 /* Prints information about the current object */
-                printf(
+                printf
+                (
                     "# \n"
                     "# - Memory record:           #%lu\n",
                     i + 1
@@ -1889,7 +1950,8 @@ void memdebug_print_active( void )
     MEMDEBUG_INIT_CHECK;
     
     /* Header */
-    printf(
+    printf
+    (
         MEMDEBUG_HR
         "# MEMDebug - Active objects\n"
         MEMDEBUG_REV
@@ -1897,24 +1959,26 @@ void memdebug_print_active( void )
     );
     
     /* Checks if objects are active */
-    if( memdebug_trace->num_active == 0 ) {
-        
+    if( memdebug_trace->num_active == 0 )
+    {
         /* No active object */
-        printf(
+        printf
+        (
             "# No objects are currently active\n"
             MEMDEBUG_HR
         );
-        
-    } else {
-        
+    }
+    else
+    {
         /* Process each allocated object */
-        for( i = 0; i < memdebug_trace->num_objects; i++ ) {
-            
+        for( i = 0; i < memdebug_trace->num_objects; i++ )
+        { 
             /* Checks if the current object is active */
-            if( memdebug_trace->objects[ i ].free == MEMDEBUG_FALSE ) {
-                
+            if( memdebug_trace->objects[ i ].free == MEMDEBUG_FALSE )
+            {
                 /* Prints information about the current object */
-                printf(
+                printf
+                (
                     "# \n"
                     "# - Memory record:           #%lu\n",
                     i + 1

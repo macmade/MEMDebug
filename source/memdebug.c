@@ -91,8 +91,8 @@ int main( void )
     free( m3 );
     
     /* Fills allocated memory areas */
-    for( i = 0; i < 256; i++ ) {
-        
+    for( i = 0; i < 256; i++ )
+    {
         m4[ i ] = i;
         m5[ i ] = i;
     }
