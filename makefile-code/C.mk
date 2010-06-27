@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # 
-# Copyright (c) 2009, Jean-David Gadina <macmade@eosgarden.com>
+# Copyright (c) 2010, Jean-David Gadina <macmade@eosgarden.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -52,23 +52,23 @@ CODE_HASOPTIONS         := 1
 # Extensions for files
 #-------------------------------------------------------------------------------
 
-EXT_CODE             = .c
-EXT_HEADERS          = .h
-EXT_LIB_OBJECT       = .lo
-EXT_LIB_ARCHIVE      = .la
-EXT_OBJECT           = .o
+EXT_CODE                = .c
+EXT_HEADERS             = .h
+EXT_LIB_OBJECT          = .lo
+EXT_LIB_ARCHIVE         = .la
+EXT_OBJECT              = .o
 
 #-------------------------------------------------------------------------------
 # Compiler tools
 #-------------------------------------------------------------------------------
 
-CC                   = gcc
-LIBTOOL              = glibtool
+CC                      = gcc
+LIBTOOL                 = glibtool
 
 #-------------------------------------------------------------------------------
 # Arguments for the compiler tools
 #-------------------------------------------------------------------------------
 
-ARGS_CC              = -pedantic -std=c89 -Wall -Wextra -Wbad-function-cast -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wdeclaration-after-statement
-ARGS_LIBTOOL_COMPILE = --mode=compile
-ARGS_LIBTOOL_LINK    = --mode=link
+ARGS_CC                 = -std=c99 -Os -pedantic -Werror -Wall -Wextra -Wbad-function-cast -Wdeclaration-after-statement -Werror-implicit-function-declaration -Wmissing-braces -Wmissing-declarations -Wmissing-field-initializers -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wparentheses -Wreturn-type -Wshadow -Wsign-compare -Wstrict-prototypes -Wswitch -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-parameter -Wunused-value -Wunused-variable
+ARGS_LIBTOOL_COMPILE    = --mode=compile
+ARGS_LIBTOOL_LINK       = --mode=link

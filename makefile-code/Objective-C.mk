@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # 
-# Copyright (c) 2009, Jean-David Gadina <macmade@eosgarden.com>
+# Copyright (c) 2010, Jean-David Gadina <macmade@eosgarden.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@
 # $Id$
 
 # Flag to let the makefile knows that the code specific options were included
-CODE_HASOPTIONS         := 1
+CODE_HASOPTIONS        := 1
 
 #-------------------------------------------------------------------------------
 # Extensions for files
@@ -69,6 +69,6 @@ LIBTOOL                 = glibtool
 # Arguments for the compiler tools
 #-------------------------------------------------------------------------------
 
-ARGS_CC                 = -Wall -Wextra
+ARGS_CC                 = -std=c99 -Os -pedantic -Werror -Wall -Wextra -Wbad-function-cast -Wdeclaration-after-statement -Werror-implicit-function-declaration -Wmissing-braces -Wmissing-declarations -Wmissing-field-initializers -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wparentheses -Wreturn-type -Wshadow -Wsign-compare -Wstrict-prototypes -Wstrict-selector-match -Wswitch -Wundeclared-selector -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-parameter -Wunused-value -Wunused-variable
 ARGS_LIBTOOL_COMPILE    = --mode=compile
 ARGS_LIBTOOL_LINK       = --mode=link

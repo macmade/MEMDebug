@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # 
-# Copyright (c) 2009, Jean-David Gadina <macmade@eosgarden.com>
+# Copyright (c) 2010, Jean-David Gadina <macmade@eosgarden.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -46,29 +46,29 @@
 # $Id$
 
 # Flag to let the makefile knows that the code specific options were included
-CODE_HASOPTIONS         := 1
+CODE_HASOPTIONS        := 1
 
 #-------------------------------------------------------------------------------
 # Extensions for files
 #-------------------------------------------------------------------------------
 
-EXT_CODE             = .cpp
-EXT_HEADERS          = .h
-EXT_LIB_OBJECT       = .lo
-EXT_LIB_ARCHIVE      = .la
-EXT_OBJECT           = .o
+EXT_CODE                = .cpp
+EXT_HEADERS             = .h
+EXT_LIB_OBJECT          = .lo
+EXT_LIB_ARCHIVE         = .la
+EXT_OBJECT              = .o
 
 #-------------------------------------------------------------------------------
 # Compiler tools
 #-------------------------------------------------------------------------------
 
-CC                   = g++
-LIBTOOL              = glibtool
+CC                      = g++
+LIBTOOL                 = glibtool
 
 #-------------------------------------------------------------------------------
 # Arguments for the compiler tools
 #-------------------------------------------------------------------------------
 
-ARGS_CC              = -Wall -Wextra
-ARGS_LIBTOOL_COMPILE = --mode=compile
-ARGS_LIBTOOL_LINK    = --mode=link
+ARGS_CC                 = -Os -pedantic -Werror -Wall -Wextra -Wmissing-braces -Wmissing-field-initializers -Wmissing-prototypes -Wparentheses -Wreturn-type -Wshadow -Wsign-compare -Wswitch -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-parameter -Wunused-value -Wunused-variable
+ARGS_LIBTOOL_COMPILE    = --mode=compile
+ARGS_LIBTOOL_LINK       = --mode=link

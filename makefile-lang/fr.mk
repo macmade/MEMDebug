@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # 
-# Copyright (c) 2009, Jean-David Gadina <macmade@eosgarden.com>
+# Copyright (c) 2010, Jean-David Gadina <macmade@eosgarden.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
