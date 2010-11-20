@@ -33,6 +33,9 @@
 #define _MEMDEBUG_H_
 #pragma once
 
+/* System includes */
+#include <stddef.h>
+
 /* Checks if the function name constant is defined */
 #ifndef __func__
 
